@@ -131,8 +131,6 @@
 </head>
 <body>
   <header>Lưu Truyện & Video</header>
-  <p style="text-align: center; color: #aaa; margin-top: -10px; font-size: 14px;">
-  </p>
   <div class="container">
     <input id="urlInput" type="text" placeholder="Dán link truyện hoặc video...">
     <input id="fileInput" type="file" accept="image/*">
@@ -235,18 +233,30 @@
 
       const isVideo = type === 'video';
       const file = fileInput.files[0];
-      const img = file ? URL.createObjectURL(file) : (isVideo ? getYouTubeThumbnail(url) : null);
       const title = await fetchPageTitle(url);
 
-      renderContent(title, url, img, isVideo);
-
-      const saved = JSON.parse(localStorage.getItem('savedContent') || '[]');
-      saved.push({ title, url, img, isVideo });
-      localStorage.setItem('savedContent', JSON.stringify(saved));
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = reader.result; // base64
+          saveAndRender(title, url, img, isVideo);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        const img = isVideo ? getYouTubeThumbnail(url) : null;
+        saveAndRender(title, url, img, isVideo);
+      }
 
       input.value = '';
       fileInput.value = '';
       document.getElementById('modal').style.display = 'none';
+    }
+
+    function saveAndRender(title, url, img, isVideo) {
+      renderContent(title, url, img, isVideo);
+      const saved = JSON.parse(localStorage.getItem('savedContent') || '[]');
+      saved.push({ title, url, img, isVideo });
+      localStorage.setItem('savedContent', JSON.stringify(saved));
       searchContent();
     }
 
