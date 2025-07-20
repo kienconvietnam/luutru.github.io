@@ -2,213 +2,217 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Lưu Truyện & Video</title>
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+  <style>  
     body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #121212;
+      color: #ffffff;
       margin: 0;
       padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(to right, #0f0f0f, #1e1e1e);
-      color: #eee;
-      min-height: 100vh;
+    }
+    header {
+      background: #1f1f1f;
+      color: #00e676;
+      padding: 1em;
+      text-align: center;
+      font-size: 1.8em;
+      font-weight: bold;
+      box-shadow: 0 2px 5px #000;
     }
     .container {
-      max-width: 700px;
-      margin: 0 auto;
-      padding: 40px 20px;
+      padding: 1em;
     }
-    h1 {
-      text-align: center;
-      color: #00ff88;
-      font-weight: 600;
-      margin-bottom: 30px;
-      font-size: 6vw;
-    }
-    input[type="text"] {
-      width: 100%;
-      padding: 12px 16px;
-      font-size: 16px;
+    input[type="text"], input[type="file"] {
+      width: 80%;
+      padding: 0.5em;
       border: none;
-      border-radius: 8px;
-      background-color: #2b2b2b;
+      border-radius: 5px;
+      margin-bottom: 0.5em;
+      background: #2c2c2c;
       color: #fff;
-      margin-bottom: 10px;
     }
     button {
-      width: 100%;
-      padding: 12px;
-      font-size: 16px;
-      border: none;
-      border-radius: 8px;
-      background-color: #00ff88;
+      padding: 0.5em 1em;
+      background: #00e676;
       color: #000;
-      font-weight: bold;
+      border: none;
       cursor: pointer;
-      transition: background 0.3s ease;
+      border-radius: 5px;
     }
     button:hover {
-      background-color: #00dd77;
+      background: #00c853;
     }
-    #contentList > .swipe {
-      background-color: #1a1a1a;
-      border-radius: 12px;
-      margin-top: 20px;
-      padding: 16px;
+    h2 {
+      margin-top: 1.5em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .swipe {
+      background: #1e1e1e;
+      padding: 0.7em;
+      margin: 0.5em 0;
       display: flex;
       align-items: center;
-      gap: 16px;
-      box-shadow: 0 2px 10px rgba(0, 255, 136, 0.2);
-      animation: fadeIn 0.6s ease;
-      flex-wrap: wrap;
-      position: relative;
-      transition: transform 0.3s ease, opacity 0.3s ease;
-    }
-    img.thumbnail {
-      width: 100px;
-      height: auto;
-      max-height: 150px;
-      object-fit: cover;
       border-radius: 8px;
-      background: #444;
-      flex-shrink: 0;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+      transition: transform 0.3s ease;
+    }
+    .swipe.removed {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    .thumbnail {
+      width: 80px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 5px;
+      margin-right: 1em;
     }
     .info {
       flex: 1;
-      min-width: 200px;
     }
     .info strong {
-      font-size: 17px;
       display: block;
-      margin-bottom: 10px;
-      word-break: break-all;
+      margin-bottom: 0.3em;
     }
-    a.view-button {
-      display: inline-block;
-      padding: 6px 14px;
-      background: #00ff88;
-      color: #000;
-      border-radius: 6px;
+    .view-button {
       text-decoration: none;
-      font-weight: bold;
-      transition: background 0.3s ease;
+      color: #40c4ff;
     }
-    a.view-button:hover {
-      background: #00dd77;
+    .collapsed {
+      display: none;
     }
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    #searchInput {
+      margin-bottom: 1em;
+      padding: 0.5em;
+      width: 95%;
+      border: none;
+      border-radius: 5px;
+      background: #2c2c2c;
+      color: white;
     }
-    @media screen and (max-width: 600px) {
-      .container {
-        padding: 20px 10px;
-      }
-      h1 {
-        font-size: 7vw;
-      }
-      img.thumbnail {
-        width: 80px;
-        max-height: 120px;
-      }
-      .info strong {
-        font-size: 15px;
-      }
+    #modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      display: none;
     }
-    .removed {
-      opacity: 0;
-      transform: translateX(-100%);
+    .modal-content {
+      background: #1e1e1e;
+      padding: 1em 2em;
+      border-radius: 10px;
+      text-align: center;
+    }
+    .modal-content h3 {
+      color: #00e676;
+    }
+    .modal-buttons {
+      margin-top: 1em;
+    }
+    .modal-buttons button {
+      margin: 0 1em;
+      background: #333;
+      color: #00e676;
+      border: 1px solid #00e676;
+    }
+    .modal-buttons button:hover {
+      background: #00e676;
+      color: black;
     }
   </style>
 </head>
 <body>
+  <header>Lưu Truyện & Video</header>
+  <p style="text-align: center; color: #aaa; margin-top: -10px; font-size: 14px;">
+    📌 Tính năng: Tự động lấy ảnh và tiêu đề từ link hoặc cho phép chọn ảnh từ máy nếu cần.
+  </p>
   <div class="container">
-    <h1>Lưu Truyện & Video</h1>
-    <input id="urlInput" type="text" placeholder="Dán URL truyện hoặc video...">
-    <button onclick="addContent()">Lưu</button>
-    <div id="contentList"></div>
+    <input id="urlInput" type="text" placeholder="Dán link truyện hoặc video...">
+    <input id="fileInput" type="file" accept="image/*">
+    <button onclick="showModal()">Lưu</button>
+    <br>
+    <input id="searchInput" type="text" placeholder="Tìm kiếm..." oninput="searchContent()">
+
+    <h2>📖 Truyện <span id="storiesToggle" onclick="toggleSection('storiesContent')" style="cursor:pointer;">➖</span></h2>
+    <div id="storiesContent"></div>
+
+    <h2>📺 Video <span id="videosToggle" onclick="toggleSection('videosContent')" style="cursor:pointer;">➖</span></h2>
+    <div id="videosContent"></div>
+  </div>
+
+  <div id="modal">
+    <div class="modal-content">
+      <h3>Chọn loại nội dung</h3>
+      <div class="modal-buttons">
+        <button onclick="classifyAndSave('truyện')">📖 Truyện</button>
+        <button onclick="classifyAndSave('video')">📺 Video</button>
+      </div>
+    </div>
   </div>
 
   <script>
-    const contentList = document.getElementById('contentList');
-    const antImages = [
-      'https://png.pngtree.com/png-clipart/20230924/original/pngtree-flat-design-ant-vector-logo-isolated-black-icon-of-an-ant-png-image_12754836.png'
-    ];
-    const flowerImages = [
-      'https://free.vector6.com/wp-content/uploads/2020/09/download-000912-hoa-hong-den-logo-vector-hoa-free-vector.jpg'
-    ];
-    let antIndex = 0;
-    let flowerIndex = 0;
+    const storiesContent = document.getElementById('storiesContent');
+    const videosContent = document.getElementById('videosContent');
 
-    window.onload = () => {
-      const saved = JSON.parse(localStorage.getItem('savedContent') || '[]');
-      for (const item of saved) {
-        renderContent(item.title, item.url, item.img);
-      }
-    };
+    function toggleSection(id) {
+      const content = document.getElementById(id);
+      const toggle = document.getElementById(id === 'storiesContent' ? 'storiesToggle' : 'videosToggle');
+      content.classList.toggle('collapsed');
+      toggle.textContent = content.classList.contains('collapsed') ? '➕' : '➖';
+    }
 
-    function getDefaultImage(url) {
-      if (url.includes('youtube') || url.includes('youtu.be')) {
-        const img = flowerImages[flowerIndex % flowerImages.length];
-        flowerIndex++;
-        return img;
-      } else {
-        const img = antImages[antIndex % antImages.length];
-        antIndex++;
-        return img;
+    function getYouTubeThumbnail(url) {
+      const videoId = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      return videoId ? `https://img.youtube.com/vi/${videoId[1]}/hqdefault.jpg` : null;
+    }
+
+    async function fetchPageTitle(url) {
+      try {
+        const response = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
+        const text = await response.text();
+        const doc = new DOMParser().parseFromString(text, "text/html");
+        return doc.querySelector('title')?.innerText || url;
+      } catch {
+        return url;
       }
     }
 
-    function renderContent(title, url, img) {
-      const fallbackImg = getDefaultImage(url);
+    function renderContent(title, url, img, isVideo) {
       const wrapper = document.createElement('div');
       wrapper.className = 'swipe';
 
       const image = document.createElement('img');
       image.className = 'thumbnail';
-      image.src = img || fallbackImg;
-      image.onerror = () => image.src = fallbackImg;
+      image.src = img || '';
+      image.onerror = () => image.src = '';
 
       const info = document.createElement('div');
       info.className = 'info';
-      info.innerHTML = `
-        <strong>${title}</strong>
-        <a href="${url}" target="_blank" class="view-button">Xem</a>
-      `;
+      info.innerHTML = `<strong>${title}</strong><a href="${url}" target="_blank" class="view-button">Xem</a>`;
 
       wrapper.appendChild(image);
       wrapper.appendChild(info);
-      contentList.appendChild(wrapper);
 
-      // Swipe to delete
+      const target = isVideo ? videosContent : storiesContent;
+      target.appendChild(wrapper);
+
       let startX = 0;
-      wrapper.addEventListener('touchstart', (e) => {
-        startX = e.touches[0].clientX;
+      wrapper.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+      wrapper.addEventListener('touchend', e => {
+        if (e.changedTouches[0].clientX - startX < -80) removeContent(wrapper, url);
       });
-      wrapper.addEventListener('touchend', (e) => {
-        const deltaX = e.changedTouches[0].clientX - startX;
-        if (deltaX < -80) {
-          removeContent(wrapper, url);
-        }
-      });
-
-      // Also support mouse drag (optional)
-      wrapper.addEventListener('mousedown', (e) => {
+      wrapper.addEventListener('mousedown', e => {
         startX = e.clientX;
-        const onMouseUp = (ev) => {
-          const deltaX = ev.clientX - startX;
-          if (deltaX < -80) {
-            removeContent(wrapper, url);
-          }
+        const onMouseUp = ev => {
+          if (ev.clientX - startX < -80) removeContent(wrapper, url);
           document.removeEventListener('mouseup', onMouseUp);
         };
         document.addEventListener('mouseup', onMouseUp);
@@ -217,34 +221,59 @@
 
     function removeContent(element, url) {
       element.classList.add('removed');
-      setTimeout(() => {
-        element.remove();
-      }, 300);
+      setTimeout(() => element.remove(), 300);
       const saved = JSON.parse(localStorage.getItem('savedContent') || '[]');
       const updated = saved.filter(item => item.url !== url);
       localStorage.setItem('savedContent', JSON.stringify(updated));
     }
 
-    async function addContent() {
-      const urlInput = document.getElementById('urlInput');
-      let url = urlInput.value.trim();
+    async function classifyAndSave(type) {
+      const input = document.getElementById('urlInput');
+      const fileInput = document.getElementById('fileInput');
+      let url = input.value.trim();
       if (!url) return;
+      if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
 
-      if (!/^https?:\/\//i.test(url)) {
-        url = 'https://' + url;
-      }
+      const isVideo = type === 'video';
+      const file = fileInput.files[0];
+      const img = file ? URL.createObjectURL(file) : (isVideo ? getYouTubeThumbnail(url) : null);
+      const title = await fetchPageTitle(url);
 
-      const title = url;
-      const img = getDefaultImage(url);
-
-      renderContent(title, url, img);
+      renderContent(title, url, img, isVideo);
 
       const saved = JSON.parse(localStorage.getItem('savedContent') || '[]');
-      saved.push({ title, url, img });
+      saved.push({ title, url, img, isVideo });
       localStorage.setItem('savedContent', JSON.stringify(saved));
 
-      urlInput.value = '';
+      input.value = '';
+      fileInput.value = '';
+      document.getElementById('modal').style.display = 'none';
+      searchContent();
     }
+
+    function showModal() {
+      const url = document.getElementById('urlInput').value.trim();
+      if (url) {
+        document.getElementById('modal').style.display = 'flex';
+      } else {
+        alert("Vui lòng dán URL trước.");
+      }
+    }
+
+    function searchContent() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      document.querySelectorAll('.swipe').forEach(div => {
+        const text = div.innerText.toLowerCase();
+        div.style.display = text.includes(query) ? '' : 'none';
+      });
+    }
+
+    window.onload = () => {
+      const saved = JSON.parse(localStorage.getItem('savedContent') || '[]');
+      for (const item of saved) {
+        renderContent(item.title, item.url, item.img, item.isVideo);
+      }
+    };
   </script>
 </body>
 </html>
