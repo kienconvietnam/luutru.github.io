@@ -183,38 +183,37 @@
     }
 
     function renderContent(title, url, img, isVideo) {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'swipe';
+  const wrapper = document.createElement('div');
+  wrapper.className = 'swipe';
 
-      const image = document.createElement('img');
-      image.className = 'thumbnail';
-      image.src = img || '';
-      image.onerror = () => image.src = '';
+  const image = document.createElement('img');
+  image.className = 'thumbnail';
+  image.src = img || '';
+  image.onerror = () => image.src = '';
 
-      const info = document.createElement('div');
-      info.className = 'info';
-      info.innerHTML = `<strong>${title}</strong><a href="${url}" target="_blank" class="view-button">Xem</a>`;
+  const info = document.createElement('div');
+  info.className = 'info';
+  info.innerHTML = `<strong>${title}</strong><a href="${url}" target="_blank" class="view-button">Xem</a>`;
 
-      wrapper.appendChild(image);
-      wrapper.appendChild(info);
+  const removeBtn = document.createElement('button');
+  removeBtn.textContent = '❌';
+  removeBtn.style.marginLeft = '10px';
+  removeBtn.style.background = 'transparent';
+  removeBtn.style.color = '#f44336';
+  removeBtn.style.border = 'none';
+  removeBtn.style.fontSize = '1.2em';
+  removeBtn.style.cursor = 'pointer';
+  removeBtn.title = "Xóa mục này";
+  removeBtn.onclick = () => removeContent(wrapper, url);
 
-      const target = isVideo ? videosContent : storiesContent;
-      target.appendChild(wrapper);
+  wrapper.appendChild(image);
+  wrapper.appendChild(info);
+  wrapper.appendChild(removeBtn);
 
-      let startX = 0;
-      wrapper.addEventListener('touchstart', e => startX = e.touches[0].clientX);
-      wrapper.addEventListener('touchend', e => {
-        if (e.changedTouches[0].clientX - startX < -80) removeContent(wrapper, url);
-      });
-      wrapper.addEventListener('mousedown', e => {
-        startX = e.clientX;
-        const onMouseUp = ev => {
-          if (ev.clientX - startX < -80) removeContent(wrapper, url);
-          document.removeEventListener('mouseup', onMouseUp);
-        };
-        document.addEventListener('mouseup', onMouseUp);
-      });
-    }
+  const target = isVideo ? videosContent : storiesContent;
+  target.appendChild(wrapper);
+}
+
 
     function removeContent(element, url) {
       element.classList.add('removed');
