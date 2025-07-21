@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Lưu Truyện & Video</title>
   <style>
     body {
@@ -23,9 +23,11 @@
     }
     .container {
       padding: 1em;
+      max-width: 600px;
+      margin: auto;
     }
     input[type="text"], input[type="file"] {
-      width: 80%;
+      width: 100%;
       padding: 0.5em;
       border: none;
       border-radius: 5px;
@@ -88,7 +90,7 @@
     #searchInput {
       margin-bottom: 1em;
       padding: 0.5em;
-      width: 95%;
+      width: 100%;
       border: none;
       border-radius: 5px;
       background: #2c2c2c;
@@ -100,22 +102,15 @@
       width: 100vw;
       height: 100vh;
       background: rgba(0,0,0,0.8);
-      display: flex;
+      display: none;
       align-items: center;
       justify-content: center;
-      display: none;
     }
     .modal-content {
       background: #1e1e1e;
       padding: 1em 2em;
       border-radius: 10px;
       text-align: center;
-    }
-    .modal-content h3 {
-      color: #00e676;
-    }
-    .modal-buttons {
-      margin-top: 1em;
     }
     .modal-buttons button {
       margin: 0 1em;
@@ -134,7 +129,7 @@
     }
     .page {
       display: none;
-      animation: fadeIn 0.5s ease;
+      animation: fadeIn 0.4s ease;
     }
     .page.active {
       display: block;
@@ -153,7 +148,7 @@
       cursor: pointer;
     }
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateX(20px); }
+      from { opacity: 0; transform: translateX(30px); }
       to { opacity: 1; transform: translateX(0); }
     }
   </style>
@@ -161,17 +156,16 @@
 <body>
   <header>Lưu Truyện & Video</header>
   <div class="container">
-    <input id="urlInput" type="text" placeholder="Dán link truyện hoặc video...">
-    <input id="fileInput" type="file" accept="image/*">
+    <input id="urlInput" type="text" placeholder="Dán link truyện hoặc video..." />
+    <input id="fileInput" type="file" accept="image/*" />
     <button onclick="showModal()">Lưu</button>
-    <br>
-    <input id="searchInput" type="text" placeholder="Tìm kiếm..." oninput="searchContent()">
+    <input id="searchInput" type="text" placeholder="Tìm kiếm..." oninput="searchContent()" />
 
-    <h2>📖 Truyện <span id="storiesToggle" onclick="toggleSection('storiesContainer')" style="cursor:pointer;">➖</span></h2>
+    <h2>📖 Truyện <span id="storiesToggle" onclick="toggleSection('storiesContainer')">➖</span></h2>
     <div id="storiesContainer" class="page-container"></div>
     <div class="pagination-buttons" id="storiesPagination"></div>
 
-    <h2>📺 Video <span id="videosToggle" onclick="toggleSection('videosContainer')" style="cursor:pointer;">➖</span></h2>
+    <h2>📺 Video <span id="videosToggle" onclick="toggleSection('videosContainer')">➖</span></h2>
     <div id="videosContainer" class="page-container"></div>
     <div class="pagination-buttons" id="videosPagination"></div>
   </div>
@@ -187,12 +181,10 @@
   </div>
 
   <script>
-    const storiesPerPage = 18;
-    const videosPerPage = 18;
-    let stories = [];
-    let videos = [];
-    let currentStoryPage = 0;
-    let currentVideoPage = 0;
+    const storiesPerPage = 15;
+    const videosPerPage = 15;
+    let stories = [], videos = [];
+    let currentStoryPage = 0, currentVideoPage = 0;
 
     function toggleSection(id) {
       const content = document.getElementById(id);
@@ -202,15 +194,15 @@
     }
 
     function getYouTubeThumbnail(url) {
-      const videoId = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-      return videoId ? `https://img.youtube.com/vi/${videoId[1]}/hqdefault.jpg` : null;
+      const match = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+      return match ? `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg` : '';
     }
 
     async function fetchPageTitle(url) {
       try {
-        const response = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
-        const text = await response.text();
-        const doc = new DOMParser().parseFromString(text, "text/html");
+        const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
+        const html = await res.text();
+        const doc = new DOMParser().parseFromString(html, "text/html");
         return doc.querySelector('title')?.innerText || url;
       } catch {
         return url;
@@ -218,50 +210,59 @@
     }
 
     function showModal() {
-      const url = document.getElementById('urlInput').value.trim();
-      if (url) {
+      if (document.getElementById('urlInput').value.trim()) {
         document.getElementById('modal').style.display = 'flex';
       } else {
         alert("Vui lòng dán URL trước.");
       }
     }
 
-    function removeContent(element, url) {
-      element.classList.add('removed');
-      setTimeout(() => element.remove(), 300);
-      const saved = JSON.parse(localStorage.getItem('savedContent') || '[]');
-      const updated = saved.filter(item => item.url !== url);
-      localStorage.setItem('savedContent', JSON.stringify(updated));
-      stories = updated.filter(x => !x.isVideo);
-      videos = updated.filter(x => x.isVideo);
+    function createContentElement(title, url, img, isVideo) {
+      const div = document.createElement('div');
+      div.className = 'swipe';
+      div.innerHTML = `
+        <img src="${img || ''}" class="thumbnail" onerror="this.src=''" />
+        <div class="info">
+          <strong>${title}</strong>
+          <a href="${url}" target="_blank" class="view-button">Xem</a>
+        </div>
+        <button onclick="removeContent(this, '${url}')" title="Xóa">❌</button>
+      `;
+      return div;
+    }
+
+    function removeContent(btn, url) {
+      const el = btn.closest('.swipe');
+      el.classList.add('removed');
+      setTimeout(() => el.remove(), 300);
+      let saved = JSON.parse(localStorage.getItem('savedContent') || '[]');
+      saved = saved.filter(item => item.url !== url);
+      localStorage.setItem('savedContent', JSON.stringify(saved));
+      stories = saved.filter(x => !x.isVideo);
+      videos = saved.filter(x => x.isVideo);
       paginate(stories, 'storiesContainer', 'storiesPagination', false);
       paginate(videos, 'videosContainer', 'videosPagination', true);
     }
 
     async function classifyAndSave(type) {
-      const input = document.getElementById('urlInput');
+      const urlInput = document.getElementById('urlInput');
       const fileInput = document.getElementById('fileInput');
-      let url = input.value.trim();
-      if (!url) return;
+      let url = urlInput.value.trim();
       if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-
       const isVideo = type === 'video';
-      const file = fileInput.files[0];
       const title = await fetchPageTitle(url);
-
+      const file = fileInput.files[0];
       if (file) {
         const reader = new FileReader();
         reader.onload = () => {
-          const img = reader.result;
-          saveAndRender(title, url, img, isVideo);
+          saveAndRender(title, url, reader.result, isVideo);
         };
         reader.readAsDataURL(file);
       } else {
-        const img = isVideo ? getYouTubeThumbnail(url) : null;
+        const img = isVideo ? getYouTubeThumbnail(url) : '';
         saveAndRender(title, url, img, isVideo);
       }
-
-      input.value = '';
+      urlInput.value = '';
       fileInput.value = '';
       document.getElementById('modal').style.display = 'none';
     }
@@ -281,85 +282,44 @@
       searchContent();
     }
 
-    function createContentElement(title, url, img, isVideo) {
-      const wrapper = document.createElement('div');
-      wrapper.className = 'swipe';
-
-      const image = document.createElement('img');
-      image.className = 'thumbnail';
-      image.src = img || '';
-      image.onerror = () => image.src = '';
-
-      const info = document.createElement('div');
-      info.className = 'info';
-      info.innerHTML = `<strong>${title}</strong><a href="${url}" target="_blank" class="view-button">Xem</a>`;
-
-      const removeBtn = document.createElement('button');
-      removeBtn.textContent = '❌';
-      removeBtn.style.marginLeft = '10px';
-      removeBtn.style.background = 'transparent';
-      removeBtn.style.color = '#f44336';
-      removeBtn.style.border = 'none';
-      removeBtn.style.fontSize = '1.2em';
-      removeBtn.style.cursor = 'pointer';
-      removeBtn.title = "Xóa mục này";
-      removeBtn.onclick = () => removeContent(wrapper, url);
-
-      wrapper.appendChild(image);
-      wrapper.appendChild(info);
-      wrapper.appendChild(removeBtn);
-      return wrapper;
-    }
-
     function paginate(items, containerId, paginationId, isVideo) {
       const container = document.getElementById(containerId);
       const pagination = document.getElementById(paginationId);
       container.innerHTML = '';
       pagination.innerHTML = '';
-
       const perPage = isVideo ? videosPerPage : storiesPerPage;
-      const pages = Math.ceil(items.length / perPage);
-      for (let i = 0; i < pages; i++) {
-        const pageDiv = document.createElement('div');
-        pageDiv.className = 'page' + (i === 0 ? ' active' : '');
+      const totalPages = Math.ceil(items.length / perPage);
+      for (let i = 0; i < totalPages; i++) {
+        const page = document.createElement('div');
+        page.className = 'page' + (i === 0 ? ' active' : '');
         const slice = items.slice(i * perPage, (i + 1) * perPage);
-        for (const item of slice) {
-          pageDiv.appendChild(createContentElement(item.title, item.url, item.img, item.isVideo));
-        }
-        container.appendChild(pageDiv);
+        slice.forEach(item => page.appendChild(createContentElement(item.title, item.url, item.img, item.isVideo)));
+        container.appendChild(page);
       }
-
-      if (pages > 1) {
-        const prevBtn = document.createElement('button');
-        const nextBtn = document.createElement('button');
-        prevBtn.textContent = '⬅️ Trang trước';
-        nextBtn.textContent = 'Trang sau ➡️';
-        let current = 0;
-
-        prevBtn.onclick = () => {
-          const pageDivs = container.querySelectorAll('.page');
-          if (current > 0) {
-            pageDivs[current].classList.remove('active');
-            current--;
-            pageDivs[current].classList.add('active');
-            if (isVideo) currentVideoPage = current;
-            else currentStoryPage = current;
+      if (totalPages > 1) {
+        const prev = document.createElement('button');
+        const next = document.createElement('button');
+        prev.textContent = '⬅ Trang trước';
+        next.textContent = 'Trang sau ➡';
+        let currentPage = 0;
+        prev.onclick = () => {
+          if (currentPage > 0) {
+            container.children[currentPage].classList.remove('active');
+            currentPage--;
+            container.children[currentPage].classList.add('active');
+            if (isVideo) currentVideoPage = currentPage; else currentStoryPage = currentPage;
           }
         };
-
-        nextBtn.onclick = () => {
-          const pageDivs = container.querySelectorAll('.page');
-          if (current < pageDivs.length - 1) {
-            pageDivs[current].classList.remove('active');
-            current++;
-            pageDivs[current].classList.add('active');
-            if (isVideo) currentVideoPage = current;
-            else currentStoryPage = current;
+        next.onclick = () => {
+          if (currentPage < totalPages - 1) {
+            container.children[currentPage].classList.remove('active');
+            currentPage++;
+            container.children[currentPage].classList.add('active');
+            if (isVideo) currentVideoPage = currentPage; else currentStoryPage = currentPage;
           }
         };
-
-        pagination.appendChild(prevBtn);
-        pagination.appendChild(nextBtn);
+        pagination.appendChild(prev);
+        pagination.appendChild(next);
       }
     }
 
