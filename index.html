@@ -1,369 +1,532 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Lưu Truyện & Video</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #121212;
-      color: #ffffff;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      background: #1f1f1f;
-      color: #00e676;
-      padding: 1em;
-      text-align: center;
-      font-size: 1.8em;
-      font-weight: bold;
-      box-shadow: 0 2px 5px #000;
-    }
-    .container {
-      padding: 1em;
-      max-width: 600px;
-      margin: auto;
-      overflow-x: hidden;
-      overflow-y: auto;
-      min-height: 80vh;
-    }
-    input[type="text"], input[type="file"] {
-      width: 100%;
-      padding: 0.5em;
-      border: none;
-      border-radius: 5px;
-      margin-bottom: 0.5em;
-      background: #2c2c2c;
-      color: #fff;
-    }
-    button {
-      padding: 0.5em 1em;
-      background: #00e676;
-      color: #000;
-      border: none;
-      cursor: pointer;
-      border-radius: 5px;
-    }
-    button:hover {
-      background: #00c853;
-    }
-    h2 {
-      margin-top: 1.5em;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .swipe {
-      background: #1e1e1e;
-      padding: 0.7em;
-      margin: 0.5em 0;
-      display: flex;
-      align-items: center;
-      border-radius: 8px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
-      transition: transform 0.3s ease;
-      justify-content: space-between;
-      gap: 1em;
-    }
-    .swipe.removed {
-      transform: translateX(-100%);
-      opacity: 0;
-    }
-    .thumbnail {
-      width: 80px;
-      height: 60px;
-      object-fit: cover;
-      border-radius: 5px;
-      margin-right: 1em;
-    }
-    .info {
-      flex: 1;
-    }
-    .info strong {
-      display: block;
-      margin-bottom: 0.3em;
-    }
-    .view-button {
-      text-decoration: none;
-      color: #40c4ff;
-    }
-    .action {
-      display: flex;
-      align-items: center;
-    }
-    .action button {
-      background: red;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      padding: 0.3em 0.6em;
-      cursor: pointer;
-    }
-    .collapsed {
-      display: none;
-    }
-    #modal {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0,0,0,0.8);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
-    .modal-content {
-      background: #1e1e1e;
-      padding: 1em 2em;
-      border-radius: 10px;
-      text-align: center;
-    }
-    .modal-buttons button {
-      margin: 0.5em;
-      background: #333;
-      color: #00e676;
-      border: 1px solid #00e676;
-    }
-    .modal-buttons button:hover {
-      background: #00e676;
-      color: black;
-    }
-    .page-container {
-      overflow: hidden;
-      position: relative;
-      min-height: 300px;
-    }
-    .page {
-      display: none;
-      animation: fadeIn 0.4s ease;
-    }
-    .page.active {
-      display: block;
-    }
-    .pagination-buttons {
-      text-align: center;
-      margin: 1em 0;
-      display: flex;
-      justify-content: center;
-      gap: 1em;
-      flex-wrap: wrap;
-    }
-    .pagination-buttons button {
-      background: #00e676;
-      color: #000;
-      border: none;
-      border-radius: 5px;
-      padding: 0.4em 0.8em;
-      cursor: pointer;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateX(30px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-    @media (max-width: 600px) {
-      .swipe {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .thumbnail {
-        width: 100%;
-        height: auto;
-        margin: 0 0 0.5em 0;
-      }
-      .pagination-buttons {
-        flex-direction: column;
-        gap: 0.5em;
-      }
-      .pagination-buttons button {
-        width: 100%;
-      }
-      .action {
-        width: 100%;
-        justify-content: flex-end;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tổ chức Liên kết Truyện/Video</title>
+    <style>
+        :root {
+            --primary: #212121;
+            --secondary: #121212;
+            --accent: #424242;
+            --text: #f5f5f5;
+            --highlight: #616161;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--primary);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--accent);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .input-section {
+            background-color: var(--secondary);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        input {
+            flex: 1;
+            background-color: var(--accent);
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 4px;
+            color: var(--text);
+            font-size: 1rem;
+        }
+
+        input::placeholder {
+            color: #bdbdbd;
+        }
+
+        button {
+            background-color: var(--highlight);
+            color: var(--text);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #757575;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .radio-option input {
+            flex: none;
+        }
+
+        .folders-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .folder {
+            background-color: var(--secondary);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .folder-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background-color: var(--accent);
+            cursor: pointer;
+        }
+
+        .folder-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .toggle-btn {
+            background: none;
+            color: var(--text);
+            font-size: 1.5rem;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .folder-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            padding: 1.5rem;
+        }
+
+        .folder-collapsed .folder-content {
+            display: none;
+        }
+
+        .item {
+            background-color: var(--accent);
+            border-radius: 6px;
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+
+        .item:hover {
+            transform: translateY(-4px);
+        }
+
+        .item-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+
+        .item-info {
+            padding: 0.75rem;
+        }
+
+        .item-title {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item-type {
+            font-size: 0.8rem;
+            color: #bdbdbd;
+        }
+
+        .video .item-type {
+            color: #ff6b6b;
+        }
+
+        .novel .item-type {
+            color: #64b5f6;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .page-input {
+            width: 60px;
+            text-align: center;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #9e9e9e;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: var(--secondary);
+            padding: 2rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .input-group {
+                flex-direction: column;
+            }
+
+            .folder-content {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+    </style>
 </head>
 <body>
-  <header>Lưu Truyện & Video</header>
-  <div class="container">
-    <input id="urlInput" type="text" placeholder="Dán link truyện hoặc video..." />
-    <input id="fileInput" type="file" accept="image/*" />
-    <button onclick="showModal()">Lưu</button>
+    <div class="container">
+        <header>
+            <h1>Lưu Trữ Truyện/Video</h1>
+            <p>Sắp xếp liên kết truyện và video của bạn</p>
+        </header>
 
-    <h2>📖 Truyện <span id="storiesToggle" onclick="toggleSection('storiesContainer')">➖</span></h2>
-    <div id="storiesContainer" class="page-container"></div>
-    <div class="pagination-buttons" id="storiesPagination"></div>
+        <section class="input-section">
+            <div class="input-group">
+                <input type="text" id="link-input" placeholder="Dán liên kết truyện/video vào đây...">
+                <button id="save-btn">Lưu</button>
+            </div>
+            <div class="input-group">
+                <input type="text" id="image-input" placeholder="Tùy chọn: Dán URL ảnh đại diện...">
+            </div>
+           
+                
+            </div>
+        </section>
 
-    <h2>📺 Video <span id="videosToggle" onclick="toggleSection('videosContainer')">➖</span></h2>
-    <div id="videosContainer" class="page-container"></div>
-    <div class="pagination-buttons" id="videosPagination"></div>
-  </div>
+        <section class="folders-container">
+            <!-- Thư mục sẽ được tạo tự động ở đây -->
+        </section>
 
-  <div id="modal">
-    <div class="modal-content">
-      <h3>Chọn loại nội dung</h3>
-      <div class="modal-buttons">
-        <button onclick="classifyAndSave('truyện')">📖 Truyện</button>
-        <button onclick="classifyAndSave('video')">📺 Video</button>
-      </div>
+        <div class="pagination">
+            <button id="prev-page">&lt; Trước</button>
+            <input type="number" class="page-input" id="current-page" value="1" min="1">
+            <button id="next-page">Sau &gt;</button>
+        </div>
+
+        <div class="modal" id="confirm-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Xác nhận Loại Nội dung</h2>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <p>Đây là Truyện/Manga hay Video?</p>
+                <div class="radio-group" style="margin: 1.5rem 0;">
+                    <div class="radio-option">
+                        <input type="radio" id="modal-novel-option" name="modal-media-type" value="novel" checked>
+                        <label for="modal-novel-option">Truyện/Manga</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" id="modal-video-option" name="modal-media-type" value="video">
+                        <label for="modal-video-option">Video</label>
+                    </div>
+                </div>
+                <button id="confirm-btn" style="width: 100%;">Xác nhận</button>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <script>
-    const storiesPerPage = 15;
-    const videosPerPage = 15;
-    let stories = [], videos = [];
-    let currentStoryPage = 0, currentVideoPage = 0;
+    <script>
+        // Trạng thái ứng dụng
+        let mediaItems = [];
+        let currentPage = 1;
+        const itemsPerPage = 14; // 7 truyện + 7 video mỗi thư mục
+        let currentLink = '';
+        let currentImageUrl = '';
 
-    function toggleSection(id) {
-      const content = document.getElementById(id);
-      const toggle = document.getElementById(id === 'storiesContainer' ? 'storiesToggle' : 'videosToggle');
-      content.classList.toggle('collapsed');
-      toggle.textContent = content.classList.contains('collapsed') ? '➕' : '➖';
-    }
+        // Phần tử DOM
+        const linkInput = document.getElementById('link-input');
+        const imageInput = document.getElementById('image-input');
+        const saveBtn = document.getElementById('save-btn');
+        const foldersContainer = document.querySelector('.folders-container');
+        const prevPageBtn = document.getElementById('prev-page');
+        const nextPageBtn = document.getElementById('next-page');
+        const currentPageInput = document.getElementById('current-page');
+        const confirmModal = document.getElementById('confirm-modal');
+        const confirmBtn = document.getElementById('confirm-btn');
+        const modalClose = document.querySelector('.modal-close');
 
-    async function fetchPageTitle(url) {
-      try {
-        const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
-        const html = await res.text();
-        const doc = new DOMParser().parseFromString(html, "text/html");
-        return doc.querySelector('title')?.innerText || url;
-      } catch {
-        return url;
-      }
-    }
+        // Khởi tạo từ localStorage
+        function loadMediaItems() {
+            const savedItems = localStorage.getItem('mediaItems');
+            if (savedItems) {
+                mediaItems = JSON.parse(savedItems);
+                renderFolders();
+            }
+        }
 
-    function showModal() {
-      if (document.getElementById('urlInput').value.trim()) {
-        document.getElementById('modal').style.display = 'flex';
-      } else {
-        alert("Vui lòng dán URL trước.");
-      }
-    }
+        // Lưu vào localStorage
+        function saveMediaItems() {
+            localStorage.setItem('mediaItems', JSON.stringify(mediaItems));
+        }
 
-    function createContentElement(title, url, img, isVideo) {
-      const div = document.createElement('div');
-      div.className = 'swipe';
-      div.innerHTML = `
-        <img src="${img || ''}" class="thumbnail" onerror="this.src=''" />
-        <div class="info">
-          <strong>${title}</strong>
-          <a href="${url}" target="_blank" class="view-button">Xem</a>
+        // Hiển thị thư mục dựa trên trang hiện tại
+        function renderFolders() {
+            foldersContainer.innerHTML = '';
+
+            // Lọc các mục cho trang hiện tại
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageItems = mediaItems.slice(startIndex, endIndex);
+
+            if (pageItems.length === 0) {
+                foldersContainer.innerHTML = `
+                    <div class="empty-state">
+                        <p>Chưa có nội dung nào được lưu. Hãy thêm bằng biểu mẫu phía trên.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Tách truyện và video
+            const novels = pageItems.filter(item => item.type === 'novel');
+            const videos = pageItems.filter(item => item.type === 'video');
+
+            // Tạo thư mục nếu có mục
+            if (novels.length > 0) {
+                createFolder('Truyện/Manga', novels, true);
+            }
+            if (videos.length > 0) {
+                createFolder('Videos', videos, false);
+            }
+        }
+
+        // Tạo phần tử thư mục
+        function createFolder(title, items, isCollapsed = false) {
+    const folder = document.createElement('div');
+    folder.className = `folder ${isCollapsed ? 'folder-collapsed' : ''}`;
+    folder.innerHTML = `
+        <div class="folder-header">
+            <div class="folder-title">${title}</div>
+            <button class="toggle-btn">${isCollapsed ? '+' : '-'}</button>
         </div>
-        <div class="action">
-          <button onclick="removeContent(this, '${url}')" title="Xóa">❌</button>
+        <div class="folder-content">
+            ${items.map(item => `
+                <div class="item ${item.type}" data-id="${item.id}">
+                    <a href="${item.link}" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit;">
+                        <img src="${item.imageUrl || 'https://placehold.co/600x400?text=Không+có+ảnh'}" alt="${item.title || 'Ảnh đại diện'}" class="item-image">
+                        <div class="item-info">
+                            <div class="item-title" title="${item.link}">${item.title || 'Không có tiêu đề'}</div>
+                            <div class="item-type">${item.type === 'novel' ? 'Truyện/Manga' : 'Video'}</div>
+                        </div>
+                    </a>
+                    <button class="delete-btn" title="Xóa mục này">🗑️</button>
+                </div>
+            `).join('')}
         </div>
-      `;
-      return div;
-    }
+    `;
 
-    function removeContent(btn, url) {
-      const el = btn.closest('.swipe');
-      el.classList.add('removed');
-      setTimeout(() => el.remove(), 300);
-      let saved = JSON.parse(localStorage.getItem('savedContent') || '[]');
-      saved = saved.filter(item => item.url !== url);
-      localStorage.setItem('savedContent', JSON.stringify(saved));
-      stories = saved.filter(x => !x.isVideo);
-      videos = saved.filter(x => x.isVideo);
-      paginate(stories, 'storiesContainer', 'storiesPagination', false);
-      paginate(videos, 'videosContainer', 'videosPagination', true);
-    }
+    // Bắt sự kiện nút thu gọn/mở rộng
+    const toggleBtn = folder.querySelector('.toggle-btn');
+    toggleBtn.addEventListener('click', () => {
+        folder.classList.toggle('folder-collapsed');
+        toggleBtn.textContent = folder.classList.contains('folder-collapsed') ? '+' : '-';
+    });
 
-    async function classifyAndSave(type) {
-      const urlInput = document.getElementById('urlInput');
-      const fileInput = document.getElementById('fileInput');
-      let url = urlInput.value.trim();
-      if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-      const isVideo = type === 'video';
-      const title = await fetchPageTitle(url);
-      const file = fileInput.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          saveAndRender(title, url, reader.result, isVideo);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        saveAndRender(title, url, '', isVideo);
-      }
-      urlInput.value = '';
-      fileInput.value = '';
-      document.getElementById('modal').style.display = 'none';
-    }
+    // Bắt sự kiện xóa mục
+    folder.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Tránh kích hoạt mở thư mục
+            const itemDiv = e.target.closest('.item');
+            const itemId = parseInt(itemDiv.dataset.id);
+            const confirmed = confirm('Bạn có chắc muốn xoá mục này không?');
+            if (confirmed) {
+                mediaItems = mediaItems.filter(item => item.id !== itemId);
+                saveMediaItems();
+                renderFolders();
+                updatePagination();
+            }
+        });
+    });
 
-    function saveAndRender(title, url, img, isVideo) {
-      const item = { title, url, img, isVideo };
-      const saved = JSON.parse(localStorage.getItem('savedContent') || '[]');
-      saved.push(item);
-      localStorage.setItem('savedContent', JSON.stringify(saved));
-      if (isVideo) {
-        videos.push(item);
-        currentVideoPage = Math.floor((videos.length - 1) / videosPerPage);
-        paginate(videos, 'videosContainer', 'videosPagination', true);
-      } else {
-        stories.push(item);
-        currentStoryPage = Math.floor((stories.length - 1) / storiesPerPage);
-        paginate(stories, 'storiesContainer', 'storiesPagination', false);
-      }
-    }
+    foldersContainer.appendChild(folder);
+}
 
-    function paginate(items, containerId, paginationId, isVideo) {
-      const container = document.getElementById(containerId);
-      const pagination = document.getElementById(paginationId);
-      container.innerHTML = '';
-      pagination.innerHTML = '';
-      const perPage = isVideo ? videosPerPage : storiesPerPage;
-      const totalPages = Math.ceil(items.length / perPage);
-      const currentPage = isVideo ? currentVideoPage : currentStoryPage;
+        // Cập nhật phân trang
+        function updatePagination() {
+            const totalPages = Math.ceil(mediaItems.length / itemsPerPage);
+            currentPageInput.max = totalPages;
+            
+            // Vô hiệu hóa nút khi cần
+            prevPageBtn.disabled = currentPage === 1;
+            nextPageBtn.disabled = currentPage === totalPages || totalPages === 0;
+            
+            // Đảm bảo trang hiện tại không vượt quá tổng số trang
+            if (currentPage > totalPages && totalPages > 0) {
+                currentPage = totalPages;
+                currentPageInput.value = currentPage;
+                renderFolders();
+            }
+        }
 
-      for (let i = 0; i < totalPages; i++) {
-        const page = document.createElement('div');
-        page.className = 'page' + (i === currentPage ? ' active' : '');
-        const slice = items.slice(i * perPage, (i + 1) * perPage);
-        slice.forEach(item => page.appendChild(createContentElement(item.title, item.url, item.img, item.isVideo)));
-        container.appendChild(page);
-      }
+        // Bộ lắng nghe sự kiện
+        saveBtn.addEventListener('click', () => {
+            currentLink = linkInput.value.trim();
+            currentImageUrl = imageInput.value.trim();
+            
+            if (!currentLink) {
+                alert('Vui lòng dán liên kết hợp lệ');
+                return;
+            }
 
-      if (totalPages > 1) {
-        const prev = document.createElement('button');
-        const next = document.createElement('button');
-        prev.textContent = '⬅ Trang trước';
-        next.textContent = 'Trang sau ➡';
-        let pageIndex = currentPage;
+            // Hiển thị hộp thoại xác nhận
+            confirmModal.style.display = 'flex';
+        });
 
-        prev.onclick = () => {
-          if (pageIndex > 0) {
-            container.children[pageIndex].classList.remove('active');
-            pageIndex--;
-            container.children[pageIndex].classList.add('active');
-            if (isVideo) currentVideoPage = pageIndex; else currentStoryPage = pageIndex;
-          }
-        };
-        next.onclick = () => {
-          if (pageIndex < totalPages - 1) {
-            container.children[pageIndex].classList.remove('active');
-            pageIndex++;
-            container.children[pageIndex].classList.add('active');
-            if (isVideo) currentVideoPage = pageIndex; else currentStoryPage = pageIndex;
-          }
-        };
-        pagination.appendChild(prev);
-        pagination.appendChild(next);
-      }
-    }
+        confirmBtn.addEventListener('click', () => {
+            const mediaType = document.querySelector('input[name="modal-media-type"]:checked').value;
+            
+            mediaItems.push({
+                id: Date.now(),
+                link: currentLink,
+                type: mediaType,
+                imageUrl: currentImageUrl,
+                title: mediaType === 'novel' ? 'Tiêu đề Truyện' : 'Tiêu đề Video',
+                dateAdded: new Date().toISOString()
+            });
 
-    window.onload = () => {
-      const saved = JSON.parse(localStorage.getItem('savedContent') || '[]');
-      stories = saved.filter(x => !x.isVideo);
-      videos = saved.filter(x => x.isVideo);
-      paginate(stories, 'storiesContainer', 'storiesPagination', false);
-      paginate(videos, 'videosContainer', 'videosPagination', true);
-    };
-  </script>
+            // Lưu vào localStorage và cập nhật giao diện
+            saveMediaItems();
+            renderFolders();
+            updatePagination();
+            
+            // Đặt lại đầu vào và đóng hộp thoại
+            linkInput.value = '';
+            imageInput.value = '';
+            confirmModal.style.display = 'none';
+        });
+
+        modalClose.addEventListener('click', () => {
+            confirmModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target === confirmModal) {
+                confirmModal.style.display = 'none';
+            }
+        });
+
+        // Điều khiển phân trang
+        prevPageBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                currentPageInput.value = currentPage;
+                renderFolders();
+            }
+        });
+
+        nextPageBtn.addEventListener('click', () => {
+            const totalPages = Math.ceil(mediaItems.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                currentPageInput.value = currentPage;
+                renderFolders();
+            }
+        });
+
+        currentPageInput.addEventListener('change', () => {
+            const totalPages = Math.ceil(mediaItems.length / itemsPerPage);
+            const newPage = parseInt(currentPageInput.value);
+            
+            if (newPage >= 1 && newPage <= totalPages && !isNaN(newPage)) {
+                currentPage = newPage;
+                renderFolders();
+            } else {
+                currentPageInput.value = currentPage;
+            }
+        });
+
+        // Khởi tạo ứng dụng
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMediaItems();
+            updatePagination();
+        });
+    </script>
 </body>
 </html>
