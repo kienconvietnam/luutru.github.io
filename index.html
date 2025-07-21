@@ -249,7 +249,7 @@
         };
         reader.readAsDataURL(file);
       } else {
-        const img = isVideo ? getYouTubeThumbnail(url) : '';
+        const img = ''; // Không lấy thumbnail YouTube nữa
         saveAndRender(title, url, img, isVideo);
       }
       urlInput.value = '';
