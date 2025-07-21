@@ -25,6 +25,9 @@
       padding: 1em;
       max-width: 600px;
       margin: auto;
+      overflow-x: hidden;
+      overflow-y: auto;
+      min-height: 80vh;
     }
     input[type="text"], input[type="file"] {
       width: 100%;
@@ -61,6 +64,7 @@
       border-radius: 8px;
       box-shadow: 0 1px 4px rgba(0,0,0,0.4);
       transition: transform 0.3s ease;
+      flex-wrap: wrap;
     }
     .swipe.removed {
       transform: translateX(-100%);
@@ -96,6 +100,7 @@
       display: none;
       align-items: center;
       justify-content: center;
+      z-index: 1000;
     }
     .modal-content {
       background: #1e1e1e;
@@ -104,7 +109,7 @@
       text-align: center;
     }
     .modal-buttons button {
-      margin: 0 1em;
+      margin: 0.5em;
       background: #333;
       color: #00e676;
       border: 1px solid #00e676;
@@ -127,10 +132,13 @@
     }
     .pagination-buttons {
       text-align: center;
-      margin-top: 1em;
+      margin: 1em 0;
+      display: flex;
+      justify-content: center;
+      gap: 1em;
+      flex-wrap: wrap;
     }
     .pagination-buttons button {
-      margin: 0 0.5em;
       background: #00e676;
       color: #000;
       border: none;
@@ -141,6 +149,20 @@
     @keyframes fadeIn {
       from { opacity: 0; transform: translateX(30px); }
       to { opacity: 1; transform: translateX(0); }
+    }
+    @media (max-width: 600px) {
+      .swipe {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .thumbnail {
+        width: 100%;
+        height: auto;
+        margin: 0 0 0.5em 0;
+      }
+      .pagination-buttons button {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -244,7 +266,7 @@
         };
         reader.readAsDataURL(file);
       } else {
-        const img = ''; // Không lấy thumbnail YouTube nữa
+        const img = '';
         saveAndRender(title, url, img, isVideo);
       }
       urlInput.value = '';
@@ -273,33 +295,37 @@
       pagination.innerHTML = '';
       const perPage = isVideo ? videosPerPage : storiesPerPage;
       const totalPages = Math.ceil(items.length / perPage);
+      const currentPage = isVideo ? currentVideoPage : currentStoryPage;
+
       for (let i = 0; i < totalPages; i++) {
         const page = document.createElement('div');
-        page.className = 'page' + (i === 0 ? ' active' : '');
+        page.className = 'page' + (i === currentPage ? ' active' : '');
         const slice = items.slice(i * perPage, (i + 1) * perPage);
         slice.forEach(item => page.appendChild(createContentElement(item.title, item.url, item.img, item.isVideo)));
         container.appendChild(page);
       }
+
       if (totalPages > 1) {
         const prev = document.createElement('button');
         const next = document.createElement('button');
         prev.textContent = '⬅ Trang trước';
         next.textContent = 'Trang sau ➡';
-        let currentPage = 0;
+        let pageIndex = currentPage;
+
         prev.onclick = () => {
-          if (currentPage > 0) {
-            container.children[currentPage].classList.remove('active');
-            currentPage--;
-            container.children[currentPage].classList.add('active');
-            if (isVideo) currentVideoPage = currentPage; else currentStoryPage = currentPage;
+          if (pageIndex > 0) {
+            container.children[pageIndex].classList.remove('active');
+            pageIndex--;
+            container.children[pageIndex].classList.add('active');
+            if (isVideo) currentVideoPage = pageIndex; else currentStoryPage = pageIndex;
           }
         };
         next.onclick = () => {
-          if (currentPage < totalPages - 1) {
-            container.children[currentPage].classList.remove('active');
-            currentPage++;
-            container.children[currentPage].classList.add('active');
-            if (isVideo) currentVideoPage = currentPage; else currentStoryPage = currentPage;
+          if (pageIndex < totalPages - 1) {
+            container.children[pageIndex].classList.remove('active');
+            pageIndex++;
+            container.children[pageIndex].classList.add('active');
+            if (isVideo) currentVideoPage = pageIndex; else currentStoryPage = pageIndex;
           }
         };
         pagination.appendChild(prev);
