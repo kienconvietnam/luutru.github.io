@@ -56,6 +56,7 @@
             display: flex;
             gap: 1rem;
             margin-bottom: 1rem;
+            flex-wrap: wrap; /* Cho phép các phần tử xuống dòng trên màn hình nhỏ */
         }
 
         input {
@@ -81,6 +82,7 @@
             cursor: pointer;
             font-size: 1rem;
             transition: background-color 0.3s;
+            flex: none; /* Đảm bảo nút không co giãn */
         }
 
         button:hover {
@@ -97,10 +99,6 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-        }
-
-        .radio-option input {
-            flex: none;
         }
 
         .folders-container {
@@ -195,13 +193,6 @@
             color: #64b5f6;
         }
 
-        .pagination {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-
         .page-input {
             width: 60px;
             text-align: center;
@@ -257,6 +248,21 @@
             .folder-content {
                 grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             }
+
+            button {
+                width: 100%; /* Đảm bảo nút chiếm toàn bộ chiều rộng */
+            }
+
+            .page-input {
+                width: 100%; /* Đảm bảo input cho trang chiếm toàn bộ chiều rộng */
+            }
+        }
+
+        .success-message {
+            display: none;
+            color: #4caf50; /* Màu xanh cho thông báo thành công */
+            text-align: center;
+            margin-top: 1rem;
         }
     </style>
 </head>
@@ -273,28 +279,18 @@
                 <input type="text" id="link-input" placeholder="Dán liên kết truyện/video vào đây...">
                 <button id="save-btn">Lưu</button>
             </div>
-          <div class="input-group">
-  <label for="image-file-input" style="display: inline-block; background-color: var(--highlight); color: var(--text); padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; text-align: center;">
-    📷 Chọn ảnh từ thiết bị
-  </label>
-  <input type="file" id="image-file-input" accept="image/*" style="display: none;">
-</div>
-
-
-           
-                
+            <div class="input-group">
+                <label for="image-file-input" style="display: inline-block; background-color: var(--highlight); color: var(--text); padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; text-align: center;">
+                    📷 Chọn ảnh từ thiết bị
+                </label>
+                <input type="file" id="image-file-input" accept="image/*" style="display: none;">
             </div>
+            <div class="success-message" id="success-message">Lưu thành công!</div>
         </section>
 
         <section class="folders-container">
             <!-- Thư mục sẽ được tạo tự động ở đây -->
         </section>
-
-        <div class="pagination">
-            <button id="prev-page">&lt; Trước</button>
-            <input type="number" class="page-input" id="current-page" value="1" min="1">
-            <button id="next-page">Sau &gt;</button>
-        </div>
 
         <div class="modal" id="confirm-modal">
             <div class="modal-content">
@@ -329,27 +325,12 @@
         // Phần tử DOM
         const linkInput = document.getElementById('link-input');
         const imageFileInput = document.getElementById('image-file-input');
-
-imageFileInput.addEventListener('change', () => {
-    const file = imageFileInput.files[0];
-    if (file && file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            currentImageUrl = e.target.result;
-            imageDropArea.innerHTML = `<img src="${currentImageUrl}" style="max-width:100%; border-radius:6px;">`;
-        };
-        reader.readAsDataURL(file);
-    }
-});
-
         const saveBtn = document.getElementById('save-btn');
         const foldersContainer = document.querySelector('.folders-container');
-        const prevPageBtn = document.getElementById('prev-page');
-        const nextPageBtn = document.getElementById('next-page');
-        const currentPageInput = document.getElementById('current-page');
         const confirmModal = document.getElementById('confirm-modal');
         const confirmBtn = document.getElementById('confirm-btn');
         const modalClose = document.querySelector('.modal-close');
+        const successMessage = document.getElementById('success-message');
 
         // Khởi tạo từ localStorage
         function loadMediaItems() {
@@ -389,87 +370,73 @@ imageFileInput.addEventListener('change', () => {
 
             // Tạo thư mục nếu có mục
             if (novels.length > 0) {
-                createFolder('Truyện/Manga', novels, true);
+                createFolder('Truyện/Manga', novels);
             }
             if (videos.length > 0) {
-                createFolder('Videos', videos, false);
+                createFolder('Videos', videos);
             }
         }
 
         // Tạo phần tử thư mục
-        function createFolder(title, items, isCollapsed = false) {
-    const folder = document.createElement('div');
-    folder.className = `folder ${isCollapsed ? 'folder-collapsed' : ''}`;
-    folder.innerHTML = `
-        <div class="folder-header">
-            <div class="folder-title">${title}</div>
-            <button class="toggle-btn">${isCollapsed ? '+' : '-'}</button>
-        </div>
-        <div class="folder-content">
-            ${items.map(item => `
-                <div class="item ${item.type}" data-id="${item.id}">
-                    <a href="${item.link}" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit;">
-                        <img src="${item.imageUrl || 'https://placehold.co/600x400?text=Không+có+ảnh'}" alt="${item.title || 'Ảnh đại diện'}" class="item-image">
-                        <div class="item-info">
-                            <div class="item-title" title="${item.link}">${item.title || 'Không có tiêu đề'}</div>
-                            <div class="item-type">${item.type === 'novel' ? 'Truyện/Manga' : 'Video'}</div>
-                        </div>
-                    </a>
-                    <button class="delete-btn" title="Xóa mục này">🗑️</button>
+        function createFolder(title, items) {
+            const folder = document.createElement('div');
+            const isCollapsed = items[0].isCollapsed; // Lấy trạng thái từ mục đầu tiên
+            folder.className = `folder ${isCollapsed ? 'folder-collapsed' : ''}`;
+            folder.innerHTML = `
+                <div class="folder-header">
+                    <div class="folder-title">${title}</div>
+                    <button class="toggle-btn">${isCollapsed ? '+' : '-'}</button>
                 </div>
-            `).join('')}
-        </div>
-    `;
+                <div class="folder-content">
+                    ${items.map(item => `
+                        <div class="item ${item.type}" data-id="${item.id}">
+                            <a href="${item.link}" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit;">
+                                <img src="${item.imageUrl || 'https://placehold.co/600x400?text=Không+có+ảnh'}" alt="${item.title || 'Ảnh đại diện'}" class="item-image">
+                                <div class="item-info">
+                                    <div class="item-title" title="${item.link}">${item.title || 'Không có tiêu đề'}</div>
+                                    <div class="item-type">${item.type === 'novel' ? 'Truyện/Manga' : 'Video'}</div>
+                                </div>
+                            </a>
+                            <button class="delete-btn" title="Xóa mục này">🗑️</button>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
 
-    // Bắt sự kiện nút thu gọn/mở rộng
-    const toggleBtn = folder.querySelector('.toggle-btn');
-    toggleBtn.addEventListener('click', () => {
-        folder.classList.toggle('folder-collapsed');
-        toggleBtn.textContent = folder.classList.contains('folder-collapsed') ? '+' : '-';
-    });
+            // Bắt sự kiện nút thu gọn/mở rộng
+            const toggleBtn = folder.querySelector('.toggle-btn');
+            toggleBtn.addEventListener('click', () => {
+                folder.classList.toggle('folder-collapsed');
+                toggleBtn.textContent = folder.classList.contains('folder-collapsed') ? '+' : '-';
+                
+                // Cập nhật trạng thái isCollapsed cho các mục
+                items.forEach(item => {
+                    item.isCollapsed = folder.classList.contains('folder-collapsed');
+                });
+                saveMediaItems(); // Lưu lại trạng thái
+            });
 
-    // Bắt sự kiện xóa mục
-    folder.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Tránh kích hoạt mở thư mục
-            const itemDiv = e.target.closest('.item');
-            const itemId = parseInt(itemDiv.dataset.id);
-            const confirmed = confirm('Bạn có chắc muốn xoá mục này không?');
-            if (confirmed) {
-                mediaItems = mediaItems.filter(item => item.id !== itemId);
-                saveMediaItems();
-                renderFolders();
-                updatePagination();
-            }
-        });
-    });
+            // Bắt sự kiện xóa mục
+            folder.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Tránh kích hoạt mở thư mục
+                    const itemDiv = e.target.closest('.item');
+                    const itemId = parseInt(itemDiv.dataset.id);
+                    const confirmed = confirm('Bạn có chắc muốn xoá mục này không?');
+                    if (confirmed) {
+                        mediaItems = mediaItems.filter(item => item.id !== itemId);
+                        saveMediaItems();
+                        renderFolders();
+                    }
+                });
+            });
 
-    foldersContainer.appendChild(folder);
-}
-
-        // Cập nhật phân trang
-        function updatePagination() {
-            const totalPages = Math.ceil(mediaItems.length / itemsPerPage);
-            currentPageInput.max = totalPages;
-            
-            // Vô hiệu hóa nút khi cần
-            prevPageBtn.disabled = currentPage === 1;
-            nextPageBtn.disabled = currentPage === totalPages || totalPages === 0;
-            
-            // Đảm bảo trang hiện tại không vượt quá tổng số trang
-            if (currentPage > totalPages && totalPages > 0) {
-                currentPage = totalPages;
-                currentPageInput.value = currentPage;
-                renderFolders();
-            }
+            foldersContainer.appendChild(folder);
         }
 
         // Bộ lắng nghe sự kiện
         saveBtn.addEventListener('click', () => {
             currentLink = linkInput.value.trim();
-            // currentImageUrl đã được cập nhật từ sự kiện paste
-
-            
             if (!currentLink) {
                 alert('Vui lòng dán liên kết hợp lệ');
                 return;
@@ -488,17 +455,23 @@ imageFileInput.addEventListener('change', () => {
                 type: mediaType,
                 imageUrl: currentImageUrl,
                 title: mediaType === 'novel' ? 'XEM' : 'XEM',
-                dateAdded: new Date().toISOString()
+                dateAdded: new Date().toISOString(),
+                isCollapsed: true // Mặc định là gọn lại
             });
 
             // Lưu vào localStorage và cập nhật giao diện
             saveMediaItems();
             renderFolders();
-            updatePagination();
+            
+            // Hiển thị thông báo thành công
+            successMessage.style.display = 'block';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 3000); // Ẩn thông báo sau 3 giây
             
             // Đặt lại đầu vào và đóng hộp thoại
             linkInput.value = '';
-            imageInput.value = '';
+            currentImageUrl = ''; // Reset ảnh
             confirmModal.style.display = 'none';
         });
 
@@ -512,75 +485,22 @@ imageFileInput.addEventListener('change', () => {
             }
         });
 
-        // Điều khiển phân trang
-        prevPageBtn.addEventListener('click', () => {
-            if (currentPage > 1) {
-                currentPage--;
-                currentPageInput.value = currentPage;
-                renderFolders();
-            }
-        });
-
-        nextPageBtn.addEventListener('click', () => {
-            const totalPages = Math.ceil(mediaItems.length / itemsPerPage);
-            if (currentPage < totalPages) {
-                currentPage++;
-                currentPageInput.value = currentPage;
-                renderFolders();
-            }
-        });
-
-        currentPageInput.addEventListener('change', () => {
-            const totalPages = Math.ceil(mediaItems.length / itemsPerPage);
-            const newPage = parseInt(currentPageInput.value);
-            
-            if (newPage >= 1 && newPage <= totalPages && !isNaN(newPage)) {
-                currentPage = newPage;
-                renderFolders();
-            } else {
-                currentPageInput.value = currentPage;
-            }
-        });
-
         // Khởi tạo ứng dụng
         document.addEventListener('DOMContentLoaded', () => {
             loadMediaItems();
-            updatePagination();
         });
 
         // Xử lý dán ảnh vào vùng imageDropArea
-imageDropArea.addEventListener('paste', (event) => {
-    const items = event.clipboardData.items;
-    for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-
-        // Nếu là ảnh dạng file
-        if (item.type.indexOf("image") !== -1) {
-            const file = item.getAsFile();
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const base64Data = e.target.result;
-                currentImageUrl = base64Data;
-                imageDropArea.innerHTML = `<img src="${base64Data}" style="max-width:100%; border-radius:6px;">`;
-            };
-            reader.readAsDataURL(file);
-            event.preventDefault();
-        }
-
-        // Nếu là HTML chứa ảnh (thường khi copy từ web)
-        if (item.type === "text/html") {
-            item.getAsString(html => {
-                const doc = new DOMParser().parseFromString(html, "text/html");
-                const img = doc.querySelector("img");
-                if (img && img.src.startsWith("http")) {
-                    currentImageUrl = img.src;
-                    imageDropArea.innerHTML = `<img src="${img.src}" style="max-width:100%; border-radius:6px;">`;
-                }
-            });
-        }
-    }
-});
-
+        imageFileInput.addEventListener('change', () => {
+            const file = imageFileInput.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    currentImageUrl = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
     </script>
 </body>
 </html>
