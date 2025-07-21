@@ -273,8 +273,11 @@
                 <button id="save-btn">Lưu</button>
             </div>
             <div class="input-group">
-                <input type="text" id="image-input" placeholder="Tùy chọn: Dán URL ảnh đại diện...">
-            </div>
+          <div id="image-drop-area" contenteditable="true"
+     style="flex:1; background-color: var(--accent); border-radius: 4px; padding: 0.75rem 1rem; color: var(--text); font-size: 1rem;">
+  Dán ảnh vào đây...
+</div>
+
            
                 
             </div>
@@ -322,7 +325,7 @@
 
         // Phần tử DOM
         const linkInput = document.getElementById('link-input');
-        const imageInput = document.getElementById('image-input');
+        const imageDropArea = document.getElementById('image-drop-area');
         const saveBtn = document.getElementById('save-btn');
         const foldersContainer = document.querySelector('.folders-container');
         const prevPageBtn = document.getElementById('prev-page');
@@ -448,7 +451,8 @@
         // Bộ lắng nghe sự kiện
         saveBtn.addEventListener('click', () => {
             currentLink = linkInput.value.trim();
-            currentImageUrl = imageInput.value.trim();
+            // currentImageUrl đã được cập nhật từ sự kiện paste
+
             
             if (!currentLink) {
                 alert('Vui lòng dán liên kết hợp lệ');
@@ -467,7 +471,7 @@
                 link: currentLink,
                 type: mediaType,
                 imageUrl: currentImageUrl,
-                title: mediaType === 'novel' ? 'Tiêu đề Truyện' : 'Tiêu đề Video',
+                title: mediaType === 'novel' ? 'XEM' : 'XEM',
                 dateAdded: new Date().toISOString()
             });
 
@@ -527,6 +531,40 @@
             loadMediaItems();
             updatePagination();
         });
+
+        // Xử lý dán ảnh vào vùng imageDropArea
+imageDropArea.addEventListener('paste', (event) => {
+    const items = event.clipboardData.items;
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+
+        // Nếu là ảnh dạng file
+        if (item.type.indexOf("image") !== -1) {
+            const file = item.getAsFile();
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Data = e.target.result;
+                currentImageUrl = base64Data;
+                imageDropArea.innerHTML = `<img src="${base64Data}" style="max-width:100%; border-radius:6px;">`;
+            };
+            reader.readAsDataURL(file);
+            event.preventDefault();
+        }
+
+        // Nếu là HTML chứa ảnh (thường khi copy từ web)
+        if (item.type === "text/html") {
+            item.getAsString(html => {
+                const doc = new DOMParser().parseFromString(html, "text/html");
+                const img = doc.querySelector("img");
+                if (img && img.src.startsWith("http")) {
+                    currentImageUrl = img.src;
+                    imageDropArea.innerHTML = `<img src="${img.src}" style="max-width:100%; border-radius:6px;">`;
+                }
+            });
+        }
+    }
+});
+
     </script>
 </body>
 </html>
