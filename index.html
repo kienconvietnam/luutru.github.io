@@ -3,509 +3,333 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tổ chức Liên kết Truyện/Video</title>
+    <title>Quản lý Truyện & Video</title>
     <style>
         :root {
-            --primary: #212121;
-            --secondary: #121212;
-            --accent: #424242;
-            --text: #f5f5f5;
-            --highlight: #616161;
+            --primary-color: #1a1a1a;
+            --secondary-color: #2d2d2d;
+            --accent-color: #4CAF50;
+            --text-color: #f0f0f0;
         }
-
+        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-
+        
         body {
-            background-color: var(--primary);
-            color: var(--text);
+            background-color: var(--primary-color);
+            color: var(--text-color);
             min-height: 100vh;
         }
-
+        
         .container {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
-            padding: 2rem;
+            padding: 20px;
         }
-
+        
         header {
             text-align: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--accent);
+            margin-bottom: 30px;
+            position: relative;
         }
-
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .input-section {
-            background-color: var(--secondary);
-            padding: 1.5rem;
-            border-radius: 8px;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .input-group {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            flex-wrap: wrap; /* Cho phép các phần tử xuống dòng trên màn hình nhỏ */
-        }
-
-        input {
-            flex: 1;
-            background-color: var(--accent);
-            border: none;
-            padding: 0.75rem 1rem;
-            border-radius: 4px;
-            color: var(--text);
-            font-size: 1rem;
-        }
-
-        input::placeholder {
-            color: #bdbdbd;
-        }
-
-        button {
-            background-color: var(--highlight);
-            color: var(--text);
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: background-color 0.3s;
-            flex: none; /* Đảm bảo nút không co giãn */
-        }
-
-        button:hover {
-            background-color: #757575;
-        }
-
-        .radio-group {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .radio-option {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .folders-container {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        .folder {
-            background-color: var(--secondary);
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .folder-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 1.5rem;
-            background-color: var(--accent);
-            cursor: pointer;
-        }
-
-        .folder-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-        }
-
-        .toggle-btn {
-            background: none;
-            color: var(--text);
-            font-size: 1.5rem;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-        }
-
-        .folder-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1rem;
-            padding: 1.5rem;
-        }
-
-        .folder-collapsed .folder-content {
-            display: none;
-        }
-
-        .item {
-            background-color: var(--accent);
-            border-radius: 6px;
-            overflow: hidden;
-            transition: transform 0.2s;
-        }
-
-        .item:hover {
-            transform: translateY(-4px);
-        }
-
-        .item-image {
+        
+        .cover-image-container {
             width: 100%;
-            height: 150px;
-            object-fit: cover;
-        }
-
-        .item-info {
-            padding: 0.75rem;
-        }
-
-        .item-title {
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-            white-space: nowrap;
+            height: 200px;
             overflow: hidden;
-            text-overflow: ellipsis;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            position: relative;
         }
-
-        .item-type {
-            font-size: 0.8rem;
-            color: #bdbdbd;
-        }
-
-        .video .item-type {
-            color: #ff6b6b;
-        }
-
-        .novel .item-type {
-            color: #64b5f6;
-        }
-
-        .page-input {
-            width: 60px;
-            text-align: center;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 2rem;
-            color: #9e9e9e;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
+        
+        .cover-image {
             width: 100%;
             height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        
+        .cover-image:hover {
+            transform: scale(1.02);
+        }
+        
+        .change-cover-btn {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
             background-color: rgba(0, 0, 0, 0.7);
-            z-index: 100;
-            justify-content: center;
-            align-items: center;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
         }
-
-        .modal-content {
-            background-color: var(--secondary);
-            padding: 2rem;
+        
+        .change-cover-btn:hover {
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+        
+        h1 {
+            margin-bottom: 20px;
+            color: var(--accent-color);
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .input-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        input, select {
+            flex-grow: 1;
+            padding: 10px 15px;
+            border-radius: 5px;
+            border: none;
+            background-color: var(--secondary-color);
+            color: var(--text-color);
+            min-width: 200px;
+        }
+        
+        button {
+            padding: 10px 15px;
+            border-radius: 5px;
+            border: none;
+            background-color: var(--accent-color);
+            color: white;
+            cursor: pointer;
+            transition: opacity 0.3s;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+        }
+        
+        .links-container {
+            background-color: var(--secondary-color);
             border-radius: 8px;
-            width: 90%;
-            max-width: 500px;
+            padding: 20px;
         }
-
-        .modal-header {
+        
+        .link-item {
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
+            transition: transform 0.2s;
         }
-
-        .modal-close {
-            background: none;
-            border: none;
-            color: var(--text);
-            font-size: 1.5rem;
-            cursor: pointer;
+        
+        .link-item:hover {
+            transform: translateX(5px);
         }
-
+        
+        .link-info {
+            flex-grow: 1;
+        }
+        
+        .link-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+            color: var(--accent-color);
+        }
+        
+        .link-url {
+            color: #aaa;
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+        
+        .link-type {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            margin-left: 10px;
+            background-color: rgba(76, 175, 80, 0.2);
+        }
+        
+        .link-actions button {
+            background-color: #ff4444;
+            padding: 5px 10px;
+            margin-left: 10px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #777;
+        }
+        
         @media (max-width: 768px) {
-            .input-group {
+            .cover-image-container {
+                height: 150px;
+            }
+            
+            .input-row {
                 flex-direction: column;
             }
-
-            .folder-content {
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            
+            .link-item {
+                flex-direction: column;
+                align-items: flex-start;
             }
-
-            button {
-                width: 100%; /* Đảm bảo nút chiếm toàn bộ chiều rộng */
-                padding: 1rem; /* Tăng kích thước nút */
+            
+            .link-actions {
+                margin-top: 10px;
+                width: 100%;
+                display: flex;
+                justify-content: flex-end;
             }
-
-            .page-input {
-                width: 100%; /* Đảm bảo input cho trang chiếm toàn bộ chiều rộng */
-            }
-
-            .item-image {
-                height: auto; /* Đảm bảo hình ảnh có chiều cao tự động */
-            }
-        }
-
-        .success-message {
-            display: none;
-            color: #4caf50; /* Màu xanh cho thông báo thành công */
-            text-align: center;
-            margin-top: 1rem;
         }
     </style>
 </head>
 <body>
-   
     <div class="container">
         <header>
-            <h1>Lưu Trữ Truyện/Video</h1>
-            <p>Sắp xếp liên kết truyện và video của bạn</p>
+            <div class="cover-image-container">
+                <img id="coverImage" src="https://placehold.co/1000x300/2d2d2d/4CAF50?text=Truyện+%26+Video+yêu+thích" alt="Ảnh bìa trang quản lý truyện và video với màu nền tối và chữ màu xanh lá" class="cover-image">
+                <button class="change-cover-btn" onclick="changeCoverImage()">Đổi ảnh bìa</button>
+            </div>
+            <h1>Quản lý Truyện & Video</h1>
         </header>
-
-        <section class="input-section">
-            <div class="input-group">
-                <input type="text" id="link-input" placeholder="Dán liên kết truyện/video vào đây...">
-                <button id="save-btn">Lưu</button>
+        
+        <div class="input-group">
+            <div class="input-row">
+                <input type="text" id="linkTitle" placeholder="Nhập tiêu đề">
+                <input type="url" id="linkUrl" placeholder="Nhập link URL">
+                <select id="linkType">
+                    <option value="truyen">Truyện</option>
+                    <option value="video">Video</option>
+                </select>
+                <input type="file" id="linkImage" accept="image/*" style="display:none" onchange="previewImage(event)">
+                <button type="button" onclick="document.getElementById('linkImage').click()">Chọn ảnh</button>
+                <button onclick="addLink()">Thêm Link</button>
             </div>
-            <div class="input-group">
-                <label for="image-file-input" style="display: inline-block; background-color: var(--highlight); color: var(--text); padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; text-align: center;">
-                    📷 Chọn ảnh từ thiết bị
-                </label>
-                <input type="file" id="image-file-input" accept="image/*" style="display: none;">
-            </div>
-            <div class="success-message" id="success-message">Lưu thành công!</div>
-        </section>
-
-        <section class="folders-container">
-            <!-- Thư mục sẽ được tạo tự động ở đây -->
-        </section>
-
-        <div class="modal" id="confirm-modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Xác nhận Loại Nội dung</h2>
-                    <button class="modal-close">&times;</button>
-                </div>
-                <p>Đây là Truyện/Manga hay Video?</p>
-                <div class="radio-group" style="margin: 1.5rem 0;">
-                    <div class="radio-option">
-                        <input type="radio" id="modal-novel-option" name="modal-media-type" value="novel" checked>
-                        <label for="modal-novel-option">Truyện/Manga</label>
-                    </div>
-                    <div class="radio-option">
-                        <input type="radio" id="modal-video-option" name="modal-media-type" value="video">
-                        <label for="modal-video-option">Video</label>
-                    </div>
-                </div>
-                <button id="confirm-btn" style="width: 100%;">Xác nhận</button>
+        </div>
+        
+        <div class="links-container">
+            <h2>Danh sách Links</h2>
+            <div id="linksList">
+                <div class="empty-state">Chưa có link nào được thêm</div>
             </div>
         </div>
     </div>
-
+    
     <script>
-        // Trạng thái ứng dụng
-        let mediaItems = [];
-        let currentPage = 1;
-        const itemsPerPage = 14; // 7 truyện + 7 video mỗi thư mục
-        let currentLink = '';
-        let currentImageUrl = '';
+        // Khởi tạo links từ localStorage hoặc mảng rỗng
+        let links = JSON.parse(localStorage.getItem('savedLinks')) || [];
+        
+        // Hiển thị danh sách links khi trang được tải
+        document.addEventListener('DOMContentLoaded', renderLinks);
+        
+        // Thêm link mới
+        function addLink() {
+            const title = document.getElementById('linkTitle').value.trim();
+            const url = document.getElementById('linkUrl').value.trim();
+            const type = document.getElementById('linkType').value;
+            const imageInput = document.getElementById('linkImage');
 
-        // Phần tử DOM
-        const linkInput = document.getElementById('link-input');
-        const imageFileInput = document.getElementById('image-file-input');
-        const saveBtn = document.getElementById('save-btn');
-        const foldersContainer = document.querySelector('.folders-container');
-        const confirmModal = document.getElementById('confirm-modal');
-        const confirmBtn = document.getElementById('confirm-btn');
-        const modalClose = document.querySelector('.modal-close');
-        const successMessage = document.getElementById('success-message');
-
-        // Khởi tạo từ localStorage
-        function loadMediaItems() {
-            const savedItems = localStorage.getItem('mediaItems');
-            if (savedItems) {
-                mediaItems = JSON.parse(savedItems);
-                renderFolders();
-            }
-        }
-
-        // Lưu vào localStorage
-        function saveMediaItems() {
-            localStorage.setItem('mediaItems', JSON.stringify(mediaItems));
-        }
-
-        // Hiển thị thư mục dựa trên trang hiện tại
-        function renderFolders() {
-            foldersContainer.innerHTML = '';
-
-            // Lọc các mục cho trang hiện tại
-            const startIndex = (currentPage - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-            const pageItems = mediaItems.slice(startIndex, endIndex);
-
-            if (pageItems.length === 0) {
-                foldersContainer.innerHTML = `
-                    <div class="empty-state">
-                        <p>Chưa có nội dung nào được lưu. Hãy thêm bằng biểu mẫu phía trên.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            // Tách truyện và video
-            const novels = pageItems.filter(item => item.type === 'novel');
-            const videos = pageItems.filter(item => item.type === 'video');
-
-            // Tạo thư mục nếu có mục
-            if (novels.length > 0) {
-                createFolder('Truyện/Manga', novels);
-            }
-            if (videos.length > 0) {
-                createFolder('Videos', videos);
-            }
-        }
-
-        // Tạo phần tử thư mục
-        function createFolder(title, items) {
-            const folder = document.createElement('div');
-            const isCollapsed = items[0].isCollapsed; // Lấy trạng thái từ mục đầu tiên
-            folder.className = `folder ${isCollapsed ? 'folder-collapsed' : ''}`;
-            folder.innerHTML = `
-                <div class="folder-header">
-                    <div class="folder-title">${title}</div>
-                    <button class="toggle-btn">${isCollapsed ? '+' : '-'}</button>
-                </div>
-                <div class="folder-content">
-                    ${items.map(item => `
-                        <div class="item ${item.type}" data-id="${item.id}">
-                            <a href="${item.link}" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit;">
-                                <img src="${item.imageUrl || 'https://placehold.co/600x400?text=Không+có+ảnh'}" alt="${item.title || 'Ảnh đại diện'}" class="item-image">
-                                <div class="item-info">
-                                    <div class="item-title" title="${item.link}">${item.title || 'Không có tiêu đề'}</div>
-                                    <div class="item-type">${item.type === 'novel' ? 'Truyện/Manga' : 'Video'}</div>
-                                </div>
-                            </a>
-                            <button class="delete-btn" title="Xóa mục này">🗑️</button>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-
-            // Bắt sự kiện nút thu gọn/mở rộng
-            const toggleBtn = folder.querySelector('.toggle-btn');
-            toggleBtn.addEventListener('click', () => {
-                folder.classList.toggle('folder-collapsed');
-                toggleBtn.textContent = folder.classList.contains('folder-collapsed') ? '+' : '-';
-                
-                // Cập nhật trạng thái isCollapsed cho các mục
-                items.forEach(item => {
-                    item.isCollapsed = folder.classList.contains('folder-collapsed');
-                });
-                saveMediaItems(); // Lưu lại trạng thái
-            });
-
-            // Bắt sự kiện xóa mục
-            folder.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Tránh kích hoạt mở thư mục
-                    const itemDiv = e.target.closest('.item');
-                    const itemId = parseInt(itemDiv.dataset.id);
-                    const confirmed = confirm('Bạn có chắc muốn xoá mục này không?');
-                    if (confirmed) {
-                        mediaItems = mediaItems.filter(item => item.id !== itemId);
-                        saveMediaItems();
-                        renderFolders();
-                    }
-                });
-            });
-
-            foldersContainer.appendChild(folder);
-        }
-
-        // Bộ lắng nghe sự kiện
-        saveBtn.addEventListener('click', () => {
-            currentLink = linkInput.value.trim();
-            if (!currentLink) {
-                alert('Vui lòng dán liên kết hợp lệ');
-                return;
-            }
-
-            // Hiển thị hộp thoại xác nhận
-            confirmModal.style.display = 'flex';
-        });
-
-        confirmBtn.addEventListener('click', () => {
-            const mediaType = document.querySelector('input[name="modal-media-type"]:checked').value;
-            
-            mediaItems.push({
-                id: Date.now(),
-                link: currentLink,
-                type: mediaType,
-                imageUrl: currentImageUrl,
-                title: mediaType === 'novel' ? 'XEM' : 'XEM',
-                dateAdded: new Date().toISOString(),
-                isCollapsed: true // Mặc định là gọn lại
-            });
-
-            // Lưu vào localStorage và cập nhật giao diện
-            saveMediaItems();
-            renderFolders();
-            
-            // Hiển thị thông báo thành công
-            successMessage.style.display = 'block';
-            setTimeout(() => {
-                successMessage.style.display = 'none';
-            }, 3000); // Ẩn thông báo sau 3 giây
-            
-            // Đặt lại đầu vào và đóng hộp thoại
-            linkInput.value = '';
-            currentImageUrl = ''; // Reset ảnh
-            confirmModal.style.display = 'none';
-        });
-
-        modalClose.addEventListener('click', () => {
-            confirmModal.style.display = 'none';
-        });
-
-        window.addEventListener('click', (e) => {
-            if (e.target === confirmModal) {
-                confirmModal.style.display = 'none';
-            }
-        });
-
-        // Khởi tạo ứng dụng
-        document.addEventListener('DOMContentLoaded', () => {
-            loadMediaItems();
-        });
-
-        // Xử lý dán ảnh vào vùng imageDropArea
-        imageFileInput.addEventListener('change', () => {
-            const file = imageFileInput.files[0];
-            if (file && file.type.startsWith('image/')) {
+            if (imageInput.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    currentImageUrl = e.target.result;
-                };
-                reader.readAsDataURL(file);
+                    links.push({ title, url, type, imageData: e.target.result });
+                    saveLinks();
+                    renderLinks();
+                    // Reset form
+                    document.getElementById('linkTitle').value = '';
+                    document.getElementById('linkUrl').value = '';
+                    imageInput.value = '';
+                }
+                reader.readAsDataURL(imageInput.files[0]);
+            } else {
+                if (!title || !url) {
+                    alert('Vui lòng nhập đủ tiêu đề và URL');
+                    return;
+                }
+                links.push({ title, url, type });
+                saveLinks();
+                renderLinks();
+                // Reset form
+                document.getElementById('linkTitle').value = '';
+                document.getElementById('linkUrl').value = '';
             }
-        });
+        }
+        
+        // Lưu links vào localStorage
+        function saveLinks() {
+            localStorage.setItem('savedLinks', JSON.stringify(links));
+        }
+        
+        // Xóa link
+        function deleteLink(index) {
+            if (confirm('Bạn có chắc muốn xóa link này?')) {
+                links.splice(index, 1);
+                saveLinks();
+                renderLinks();
+            }
+        }
+        
+        // Hiển thị danh sách links
+        function renderLinks() {
+            const linksList = document.getElementById('linksList');
+            
+            if (links.length === 0) {
+                linksList.innerHTML = '<div class="empty-state">Chưa có link nào được thêm</div>';
+                return;
+            }
+            
+            linksList.innerHTML = '';
+            
+            links.forEach((link, index) => {
+                const linkItem = document.createElement('div');
+                linkItem.className = 'link-item';
+                
+                linkItem.innerHTML = `
+                    <div class="link-info">
+                        ${link.imageData ? `<img src="${link.imageData}" alt="Ảnh đại diện ${link.title}" style="max-width:100px; max-height:100px; border-radius:4px; margin-right:10px;">` : ''}
+                        <span class="link-title">${link.title}</span>
+                        <span class="link-type">${link.type === 'truyen' ? 'Truyện' : 'Video'}</span>
+                        <a href="${link.url}" target="_blank" class="link-url">${link.url}</a>
+                    </div>
+                    <div class="link-actions">
+                        <button onclick="deleteLink(${index})">Xóa</button>
+                    </div>
+                `;
+                
+                linksList.appendChild(linkItem);
+            });
+        }
+        
+        // Thay đổi ảnh bìa
+        function changeCoverImage() {
+            const newImageUrl = prompt('Nhập URL ảnh bìa mới:', 'https://placehold.co/1000x300/2d2d2d/4CAF50?text=Truyện+%26+Video');
+            
+            if (newImageUrl) {
+                document.getElementById('coverImage').src = newImageUrl;
+                localStorage.setItem('coverImageUrl', newImageUrl);
+            }
+        }
+        
+        // Kiểm tra nếu có ảnh bìa đã lưu trong localStorage
+        if (localStorage.getItem('coverImageUrl')) {
+            document.getElementById('coverImage').src = localStorage.getItem('coverImageUrl');
+        }
     </script>
 </body>
 </html>
