@@ -261,10 +261,7 @@
     </style>
 </head>
 <body>
-    <div class="input-group">
-  <input type="file" id="image-file-input" accept="image/*" style="color: var(--text);">
-</div>
-
+   
     <div class="container">
         <header>
             <h1>Lưu Trữ Truyện/Video</h1>
@@ -276,13 +273,13 @@
                 <input type="text" id="link-input" placeholder="Dán liên kết truyện/video vào đây...">
                 <button id="save-btn">Lưu</button>
             </div>
-            <div class="input-group">
-         <div id="image-drop-area" contenteditable="true"
-     style="flex:1; background-color: var(--accent); border-radius: 4px; padding: 0.75rem 1rem; color: var(--text); font-size: 1rem;">
-  📋 Dán ảnh từ web (PC) hoặc chọn ảnh từ máy (📱)
+          <div class="input-group">
+  <label for="image-file-input" style="display: inline-block; background-color: var(--highlight); color: var(--text); padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; text-align: center;">
+    📷 Chọn ảnh từ thiết bị
+  </label>
+  <input type="file" id="image-file-input" accept="image/*" style="display: none;">
 </div>
 
-</div>
 
            
                 
