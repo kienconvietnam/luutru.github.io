@@ -261,6 +261,10 @@
     </style>
 </head>
 <body>
+    <div class="input-group">
+  <input type="file" id="image-file-input" accept="image/*" style="color: var(--text);">
+</div>
+
     <div class="container">
         <header>
             <h1>Lưu Trữ Truyện/Video</h1>
@@ -273,9 +277,11 @@
                 <button id="save-btn">Lưu</button>
             </div>
             <div class="input-group">
-          <div id="image-drop-area" contenteditable="true"
+         <div id="image-drop-area" contenteditable="true"
      style="flex:1; background-color: var(--accent); border-radius: 4px; padding: 0.75rem 1rem; color: var(--text); font-size: 1rem;">
-  Dán ảnh vào đây...
+  📋 Dán ảnh từ web (PC) hoặc chọn ảnh từ máy (📱)
+</div>
+
 </div>
 
            
@@ -325,7 +331,20 @@
 
         // Phần tử DOM
         const linkInput = document.getElementById('link-input');
-        const imageDropArea = document.getElementById('image-drop-area');
+        const imageFileInput = document.getElementById('image-file-input');
+
+imageFileInput.addEventListener('change', () => {
+    const file = imageFileInput.files[0];
+    if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            currentImageUrl = e.target.result;
+            imageDropArea.innerHTML = `<img src="${currentImageUrl}" style="max-width:100%; border-radius:6px;">`;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
         const saveBtn = document.getElementById('save-btn');
         const foldersContainer = document.querySelector('.folders-container');
         const prevPageBtn = document.getElementById('prev-page');
