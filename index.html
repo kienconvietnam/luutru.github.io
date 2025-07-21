@@ -1,329 +1,319 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Truyện & Video</title>
-    <style>
-        :root {
-            --primary-color: #1a1a1a;
-            --secondary-color: #2d2d2d;
-            --accent-color: #4CAF50;
-            --text-color: #f0f0f0;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background-color: var(--primary-color);
-            color: var(--text-color);
-            min-height: 100vh;
-        }
-        
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-            position: relative;
-        }
-        
-        
-        .cover-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.3s ease;
-        }
-        
-        .cover-image:hover {
-            transform: scale(1.02);
-        }
-        
-        .change-cover-btn {
-            position: absolute;
-            bottom: 15px;
-            right: 15px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        
-        .change-cover-btn:hover {
-            background-color: rgba(0, 0, 0, 0.9);
-        }
-        
-        h1 {
-            margin-bottom: 20px;
-            color: var(--accent-color);
-        }
-        
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-        
-        .input-row {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        input, select {
-            flex-grow: 1;
-            padding: 10px 15px;
-            border-radius: 5px;
-            border: none;
-            background-color: var(--secondary-color);
-            color: var(--text-color);
-            min-width: 200px;
-        }
-        
-        button {
-            padding: 10px 15px;
-            border-radius: 5px;
-            border: none;
-            background-color: var(--accent-color);
-            color: white;
-            cursor: pointer;
-            transition: opacity 0.3s;
-            font-weight: bold;
-        }
-        
-        button:hover {
-            opacity: 0.9;
-        }
-        
-        .links-container {
-            background-color: var(--secondary-color);
-            border-radius: 8px;
-            padding: 20px;
-        }
-        
-        .link-item {
-            background-color: rgba(255, 255, 255, 0.05);
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: transform 0.2s;
-        }
-        
-        .link-item:hover {
-            transform: translateX(5px);
-        }
-        
-        .link-info {
-            flex-grow: 1;
-        }
-        
-        .link-title {
-            font-weight: bold;
-            margin-bottom: 5px;
-            display: block;
-            color: var(--accent-color);
-        }
-        
-        .link-url {
-            color: #aaa;
-            font-size: 0.9em;
-            word-break: break-all;
-        }
-        
-        .link-type {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 3px;
-            font-size: 0.8em;
-            margin-left: 10px;
-            background-color: rgba(76, 175, 80, 0.2);
-        }
-        
-        .link-actions button {
-            background-color: #ff4444;
-            padding: 5px 10px;
-            margin-left: 10px;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 30px;
-            color: #777;
-        }
-        
-        @media (max-width: 768px) {
-            .cover-image-container {
-                height: 150px;
-            }
-            
-            .input-row {
-                flex-direction: column;
-            }
-            
-            .link-item {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .link-actions {
-                margin-top: 10px;
-                width: 100%;
-                display: flex;
-                justify-content: flex-end;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý Truyện & Video</title>
+  <style>
+    :root {
+      --primary-color: #1a1a1a;
+      --secondary-color: #2d2d2d;
+      --accent-color: #4CAF50;
+      --text-color: #f0f0f0;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--primary-color);
+      color: var(--text-color);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+      position: relative;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      color: var(--accent-color);
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    input, select {
+      flex-grow: 1;
+      padding: 10px 15px;
+      border-radius: 5px;
+      border: none;
+      background-color: var(--secondary-color);
+      color: var(--text-color);
+      min-width: 200px;
+    }
+
+    button {
+      padding: 10px 15px;
+      border-radius: 5px;
+      border: none;
+      background-color: var(--accent-color);
+      color: white;
+      cursor: pointer;
+      transition: opacity 0.3s;
+      font-weight: bold;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .links-container {
+      background-color: var(--secondary-color);
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .link-item {
+      background-color: rgba(255, 255, 255, 0.05);
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: transform 0.2s;
+    }
+
+    .link-item:hover {
+      transform: translateX(5px);
+    }
+
+    .link-info {
+      flex-grow: 1;
+    }
+
+    .link-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+      display: block;
+      color: var(--accent-color);
+    }
+
+    .link-url {
+      color: #aaa;
+      font-size: 0.9em;
+      word-break: break-word;
+    }
+
+    .link-type {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-size: 0.8em;
+      margin-left: 10px;
+      background-color: rgba(76, 175, 80, 0.2);
+    }
+
+    .link-actions button {
+      background-color: #ff4444;
+      padding: 5px 10px;
+      margin-left: 10px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 30px;
+      color: #777;
+    }
+
+    .pagination {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pagination input {
+      width: 50px;
+      text-align: center;
+    }
+
+    @media (max-width: 768px) {
+      .input-row {
+        flex-direction: column;
+      }
+
+      .link-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .link-actions {
+        margin-top: 10px;
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            
-            <h1>Quản lý Truyện & Video</h1>
-        </header>
-        
-        <div class="input-group">
-            <div class="input-row">
-                <input type="text" id="linkTitle" placeholder="Nhập tiêu đề">
-                <input type="url" id="linkUrl" placeholder="Nhập link URL">
-                <select id="linkType">
-                    <option value="truyen">Truyện</option>
-                    <option value="video">Video</option>
-                </select>
-                <input type="file" id="linkImage" accept="image/*" style="display:none" onchange="previewImage(event)">
-                <button type="button" onclick="document.getElementById('linkImage').click()">Chọn ảnh</button>
-                <button onclick="addLink()">Thêm Link</button>
-            </div>
-        </div>
-        
-        <div class="links-container">
-            <h2>Danh sách Links</h2>
-            <div id="linksList">
-                <div class="empty-state">Chưa có link nào được thêm</div>
-            </div>
-        </div>
+  <div class="container">
+    <header>
+      <h1>Quản lý Truyện & Video</h1>
+    </header>
+
+    <div class="input-group">
+      <div class="input-row">
+        <input type="text" id="linkTitle" placeholder="Nhập tiêu đề">
+        <input type="url" id="linkUrl" placeholder="Nhập link URL">
+        <select id="linkType">
+          <option value="truyen">Truyện</option>
+          <option value="video">Video</option>
+        </select>
+        <input type="file" id="linkImage" accept="image/*" style="display:none" onchange="previewImage(event)">
+        <button type="button" onclick="document.getElementById('linkImage').click()">Chọn ảnh</button>
+        <button onclick="addLink()">Thêm Link</button>
+      </div>
     </div>
-    
-    <script>
-        // Khởi tạo links từ localStorage hoặc mảng rỗng
-        let links = JSON.parse(localStorage.getItem('savedLinks')) || [];
-        
-        // Hiển thị danh sách links khi trang được tải
-        document.addEventListener('DOMContentLoaded', renderLinks);
-        
-        // Thêm link mới
-        function addLink() {
-            const title = document.getElementById('linkTitle').value.trim();
-            const url = document.getElementById('linkUrl').value.trim();
-            const type = document.getElementById('linkType').value;
-            const imageInput = document.getElementById('linkImage');
 
-            if (!title || !url) {
-                alert('Vui lòng nhập đủ tiêu đề và URL');
-                return;
-            }
+    <div class="links-container">
+      <h2>Danh sách Links</h2>
+      <div id="linksList"></div>
+      <div class="pagination">
+        <button onclick="changePage(currentPage - 1)">◀</button>
+        <span>Trang <span id="currentPageDisplay">1</span> / <span id="totalPagesDisplay">1</span></span>
+        <button onclick="changePage(currentPage + 1)">▶</button>
+        <input type="number" id="jumpToPage" placeholder="Tới trang" min="1" onchange="jumpToPage()">
+      </div>
+    </div>
+  </div>
 
-            if (imageInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    links.push({ title, url, type, imageData: e.target.result });
-                    saveLinks();
-                    renderLinks();
-                    // Reset form
-                    resetForm();
-                }
-                reader.readAsDataURL(imageInput.files[0]);
-            } else {
-                links.push({ title, url, type });
-                saveLinks();
-                renderLinks();
-                // Reset form
-                resetForm();
-            }
-        }
-        
-        // Lưu links vào localStorage
-        function saveLinks() {
-            localStorage.setItem('savedLinks', JSON.stringify(links));
-        }
-        
-        // Xóa link
-        function deleteLink(index) {
-            if (confirm('Bạn có chắc muốn xóa link này?')) {
-                links.splice(index, 1);
-                saveLinks();
-                renderLinks();
-            }
-        }
-        
-        // Hiển thị danh sách links
-        function renderLinks() {
-            const linksList = document.getElementById('linksList');
-            
-            if (links.length === 0) {
-                linksList.innerHTML = '<div class="empty-state">Chưa có link nào được thêm</div>';
-                return;
-            }
-            
-            linksList.innerHTML = '';
-            
-            links.forEach((link, index) => {
-                const linkItem = document.createElement('div');
-                linkItem.className = 'link-item';
-                
-                linkItem.innerHTML = `
-                    <div class="link-info">
-                        ${link.imageData ? `<img src="${link.imageData}" alt="Ảnh đại diện ${link.title}" style="max-width:100px; max-height:100px; border-radius:4px; margin-right:10px;">` : ''}
-                        <span class="link-title">${link.title}</span>
-                        <span class="link-type">${link.type === 'truyen' ? 'Truyện' : 'Video'}</span>
-                        <a href="${link.url}" target="_blank" class="link-url">${link.url}</a>
-                    </div>
-                    <div class="link-actions">
-                        <button onclick="deleteLink(${index})">Xóa</button>
-                    </div>
-                `;
-                
-                linksList.appendChild(linkItem);
-            });
-        }
-        
-        // Thay đổi ảnh bìa
-        function changeCoverImage() {
-            const newImageUrl = prompt('Nhập URL ảnh bìa mới:', 'https://placehold.co/1000x300/2d2d2d/4CAF50?text=Truyện+%26+Video');
-            
-            if (newImageUrl) {
-                document.getElementById('coverImage').src = newImageUrl;
-                localStorage.setItem('coverImageUrl', newImageUrl);
-            }
-        }
-        
-        // Kiểm tra nếu có ảnh bìa đã lưu trong localStorage
-        if (localStorage.getItem('coverImageUrl')) {
-            document.getElementById('coverImage').src = localStorage.getItem('coverImageUrl');
-        }
+  <script>
+    let links = JSON.parse(localStorage.getItem('savedLinks')) || [];
+    let currentPage = 1;
+    const itemsPerPage = 10;
 
-        // Reset form
-        function resetForm() {
-            document.getElementById('linkTitle').value = '';
-            document.getElementById('linkUrl').value = '';
-            document.getElementById('linkImage').value = '';
-        }
-    </script>
+    document.addEventListener('DOMContentLoaded', () => {
+      renderLinks();
+    });
+
+    function addLink() {
+      const title = document.getElementById('linkTitle').value.trim();
+      const url = document.getElementById('linkUrl').value.trim();
+      const type = document.getElementById('linkType').value;
+      const imageInput = document.getElementById('linkImage');
+
+      if (!title || !url) {
+        alert('Vui lòng nhập đủ tiêu đề và URL');
+        return;
+      }
+
+      if (imageInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          links.push({ title, url, type, imageData: e.target.result });
+          saveLinks();
+          resetForm();
+          renderLinks();
+        };
+        reader.readAsDataURL(imageInput.files[0]);
+      } else {
+        links.push({ title, url, type });
+        saveLinks();
+        resetForm();
+        renderLinks();
+      }
+    }
+
+    function saveLinks() {
+      localStorage.setItem('savedLinks', JSON.stringify(links));
+    }
+
+    function deleteLink(index) {
+      if (confirm('Bạn có chắc muốn xóa link này?')) {
+        const globalIndex = (currentPage - 1) * itemsPerPage + index;
+        links.splice(globalIndex, 1);
+        saveLinks();
+        if (currentPage > getTotalPages()) currentPage--;
+        renderLinks();
+      }
+    }
+
+    function getTotalPages() {
+      return Math.ceil(links.length / itemsPerPage) || 1;
+    }
+
+    function changePage(newPage) {
+      const totalPages = getTotalPages();
+      if (newPage >= 1 && newPage <= totalPages) {
+        currentPage = newPage;
+        renderLinks();
+      }
+    }
+
+    function jumpToPage() {
+      const pageInput = parseInt(document.getElementById('jumpToPage').value);
+      if (!isNaN(pageInput)) {
+        changePage(pageInput);
+      }
+    }
+
+    function renderLinks() {
+      const linksList = document.getElementById('linksList');
+      const totalPages = getTotalPages();
+      const start = (currentPage - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      const currentLinks = links.slice(start, end);
+
+      document.getElementById('currentPageDisplay').innerText = currentPage;
+      document.getElementById('totalPagesDisplay').innerText = totalPages;
+
+      if (currentLinks.length === 0) {
+        linksList.innerHTML = '<div class="empty-state">Chưa có link nào được thêm</div>';
+        return;
+      }
+
+      linksList.innerHTML = '';
+
+      currentLinks.forEach((link, index) => {
+        const linkItem = document.createElement('div');
+        linkItem.className = 'link-item';
+        linkItem.innerHTML = `
+          <div class="link-info">
+            ${link.imageData ? `<img src="${link.imageData}" alt="Ảnh đại diện ${link.title}" style="max-width:100px; max-height:100px; border-radius:4px; margin-right:10px;">` : ''}
+            <span class="link-title">${link.title}</span>
+            <span class="link-type">${link.type === 'truyen' ? 'Truyện' : 'Video'}</span>
+            <a href="${link.url}" target="_blank" class="link-url">${link.url}</a>
+          </div>
+          <div class="link-actions">
+            <button onclick="deleteLink(${index})">Xóa</button>
+          </div>
+        `;
+        linksList.appendChild(linkItem);
+      });
+    }
+
+    function resetForm() {
+      document.getElementById('linkTitle').value = '';
+      document.getElementById('linkUrl').value = '';
+      document.getElementById('linkImage').value = '';
+    }
+  </script>
 </body>
 </html>
