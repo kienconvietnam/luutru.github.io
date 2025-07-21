@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="format-detection" content="telephone=no">
     <title>Quản lý Truyện & Video</title>
-
     <style>
-             :root {
+        :root {
             --primary-color: #1a1a1a;
             --secondary-color: #2d2d2d;
             --accent-color: #4CAF50;
@@ -133,7 +131,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
             transition: transform 0.2s;
         }
         
@@ -143,8 +140,6 @@
         
         .link-info {
             flex-grow: 1;
-            display: flex;
-            flex-direction: column;
         }
         
         .link-title {
@@ -157,7 +152,7 @@
         .link-url {
             color: #aaa;
             font-size: 0.9em;
-            word-break: break-word;
+            word-break: break-all;
         }
         
         .link-type {
@@ -165,7 +160,7 @@
             padding: 3px 8px;
             border-radius: 3px;
             font-size: 0.8em;
-            margin-top: 5px;
+            margin-left: 10px;
             background-color: rgba(76, 175, 80, 0.2);
         }
         
@@ -181,45 +176,27 @@
             color: #777;
         }
         
-       @media (max-width: 768px) {
-    .cover-image-container {
-        height: 150px;
-    }
-
-    .input-row {
-        flex-direction: column;
-    }
-
-    .link-item {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .link-info {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .link-info img {
-        max-width: 100%;
-        height: auto;
-        margin-bottom: 10px;
-    }
-
-    .link-actions {
-        margin-top: 10px;
-        width: 100%;
-        display: flex;
-        justify-content: flex-end;
-        flex-wrap: wrap;
-    }
-
-    input, select, button {
-        width: 100%;
-    }
-}
-
+        @media (max-width: 768px) {
+            .cover-image-container {
+                height: 150px;
+            }
+            
+            .input-row {
+                flex-direction: column;
+            }
+            
+            .link-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .link-actions {
+                margin-top: 10px;
+                width: 100%;
+                display: flex;
+                justify-content: flex-end;
+            }
+        }
     </style>
 </head>
 <body>
