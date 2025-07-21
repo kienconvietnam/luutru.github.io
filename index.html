@@ -245,6 +245,11 @@
             const type = document.getElementById('linkType').value;
             const imageInput = document.getElementById('linkImage');
 
+            if (!title || !url) {
+                alert('Vui lòng nhập đủ tiêu đề và URL');
+                return;
+            }
+
             if (imageInput.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
@@ -252,22 +257,15 @@
                     saveLinks();
                     renderLinks();
                     // Reset form
-                    document.getElementById('linkTitle').value = '';
-                    document.getElementById('linkUrl').value = '';
-                    imageInput.value = '';
+                    resetForm();
                 }
                 reader.readAsDataURL(imageInput.files[0]);
             } else {
-                if (!title || !url) {
-                    alert('Vui lòng nhập đủ tiêu đề và URL');
-                    return;
-                }
                 links.push({ title, url, type });
                 saveLinks();
                 renderLinks();
                 // Reset form
-                document.getElementById('linkTitle').value = '';
-                document.getElementById('linkUrl').value = '';
+                resetForm();
             }
         }
         
@@ -329,6 +327,13 @@
         // Kiểm tra nếu có ảnh bìa đã lưu trong localStorage
         if (localStorage.getItem('coverImageUrl')) {
             document.getElementById('coverImage').src = localStorage.getItem('coverImageUrl');
+        }
+
+        // Reset form
+        function resetForm() {
+            document.getElementById('linkTitle').value = '';
+            document.getElementById('linkUrl').value = '';
+            document.getElementById('linkImage').value = '';
         }
     </script>
 </body>
