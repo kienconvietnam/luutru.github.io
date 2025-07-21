@@ -281,9 +281,11 @@
       localStorage.setItem('savedContent', JSON.stringify(saved));
       if (isVideo) {
         videos.push(item);
+        currentVideoPage = Math.floor((videos.length - 1) / videosPerPage);
         paginate(videos, 'videosContainer', 'videosPagination', true);
       } else {
         stories.push(item);
+        currentStoryPage = Math.floor((stories.length - 1) / storiesPerPage);
         paginate(stories, 'storiesContainer', 'storiesPagination', false);
       }
     }
