@@ -64,7 +64,8 @@
       border-radius: 8px;
       box-shadow: 0 1px 4px rgba(0,0,0,0.4);
       transition: transform 0.3s ease;
-      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 1em;
     }
     .swipe.removed {
       transform: translateX(-100%);
@@ -87,6 +88,18 @@
     .view-button {
       text-decoration: none;
       color: #40c4ff;
+    }
+    .action {
+      display: flex;
+      align-items: center;
+    }
+    .action button {
+      background: red;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 0.3em 0.6em;
+      cursor: pointer;
     }
     .collapsed {
       display: none;
@@ -160,8 +173,16 @@
         height: auto;
         margin: 0 0 0.5em 0;
       }
+      .pagination-buttons {
+        flex-direction: column;
+        gap: 0.5em;
+      }
       .pagination-buttons button {
         width: 100%;
+      }
+      .action {
+        width: 100%;
+        justify-content: flex-end;
       }
     }
   </style>
@@ -233,7 +254,9 @@
           <strong>${title}</strong>
           <a href="${url}" target="_blank" class="view-button">Xem</a>
         </div>
-        <button onclick="removeContent(this, '${url}')" title="Xóa">❌</button>
+        <div class="action">
+          <button onclick="removeContent(this, '${url}')" title="Xóa">❌</button>
+        </div>
       `;
       return div;
     }
@@ -266,8 +289,7 @@
         };
         reader.readAsDataURL(file);
       } else {
-        const img = '';
-        saveAndRender(title, url, img, isVideo);
+        saveAndRender(title, url, '', isVideo);
       }
       urlInput.value = '';
       fileInput.value = '';
