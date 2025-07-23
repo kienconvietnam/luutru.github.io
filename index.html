@@ -202,179 +202,149 @@
       </div>
     </div>
   </div>
+  <script>
+const DB_NAME = 'LinkManagerDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'links';
+let db = null;
+let currentPage = 1;
+const itemsPerPage = 15;
 
- <script>
-  let db;
-  let currentPage = 1;
-  const itemsPerPage = 10;
-
-  document.addEventListener('DOMContentLoaded', () => {
-    openDatabase();
+window.onload = function () {
+  initDB().then(() => {
+    migrateLocalStorage(); // Chuyển dữ liệu cũ nếu có
+    renderLinks();
   });
+};
 
-  function openDatabase() {
-    const request = indexedDB.open('LinkManagerDB', 1);
+function initDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-    request.onupgradeneeded = function (event) {
+    request.onerror = () => reject('Lỗi mở IndexedDB');
+    request.onsuccess = (event) => {
       db = event.target.result;
-      if (!db.objectStoreNames.contains('links')) {
-        db.createObjectStore('links', { keyPath: 'id', autoIncrement: true });
+      resolve();
+    };
+    request.onupgradeneeded = (event) => {
+      db = event.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
       }
     };
+  });
+}
 
-    request.onsuccess = function (event) {
-      db = event.target.result;
-      renderLinks();
-    };
+function migrateLocalStorage() {
+  const oldData = JSON.parse(localStorage.getItem('links') || '[]');
+  if (oldData.length === 0) return;
 
-    request.onerror = function () {
-      alert('Không thể mở IndexedDB!');
-    };
+  const tx = db.transaction(STORE_NAME, 'readwrite');
+  const store = tx.objectStore(STORE_NAME);
+
+  oldData.forEach(item => store.add(item));
+  localStorage.removeItem('links');
+}
+
+function addLink() {
+  const title = document.getElementById('linkTitle').value.trim();
+  const url = document.getElementById('linkUrl').value.trim();
+  const type = document.getElementById('linkType').value;
+
+  if (!title || !url) return alert('Nhập đầy đủ tiêu đề và URL');
+
+  const fileInput = document.getElementById('linkImage');
+  const reader = new FileReader();
+
+  const save = (imageData = null) => {
+    const link = { title, url, type, imageData, createdAt: Date.now() };
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).add(link).onsuccess = () => renderLinks();
+  };
+
+  if (fileInput.files[0]) {
+    reader.onload = (e) => save(e.target.result);
+    reader.readAsDataURL(fileInput.files[0]);
+  } else if (type === 'video' && url.includes('youtube')) {
+    const id = extractYouTubeID(url);
+    const thumbnail = `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+    fetch(thumbnail)
+      .then(res => res.blob())
+      .then(blob => {
+        reader.onload = (e) => save(e.target.result);
+        reader.readAsDataURL(blob);
+      });
+  } else {
+    save();
   }
 
-  function addLink() {
-    const title = document.getElementById('linkTitle').value.trim();
-    const url = document.getElementById('linkUrl').value.trim();
-    const type = document.getElementById('linkType').value;
-    const imageInput = document.getElementById('linkImage');
+  document.getElementById('linkTitle').value = '';
+  document.getElementById('linkUrl').value = '';
+  document.getElementById('linkImage').value = '';
+}
 
-    if (!title || !url) {
-      alert('Vui lòng nhập đủ tiêu đề và URL');
-      return;
-    }
+function extractYouTubeID(url) {
+  const regExp = /(?:youtube\.com.*[?&]v=|youtu\.be\/)([^&\n?#]+)/;
+  const match = url.match(regExp);
+  return match ? match[1] : '';
+}
 
-    const store = db.transaction(['links'], 'readwrite').objectStore('links');
+function renderLinks() {
+  const tx = db.transaction(STORE_NAME, 'readonly');
+  const store = tx.objectStore(STORE_NAME);
+  const links = [];
 
-    function save(data) {
-      store.add(data).onsuccess = () => {
-        resetForm();
-        renderLinks();
-      };
-    }
-
-    if (imageInput.files[0]) {
-      resizeImage(imageInput.files[0], 200, 200, (imageData) => {
-        save({ title, url, type, imageData });
-      });
+  store.openCursor(null, 'prev').onsuccess = function (event) {
+    const cursor = event.target.result;
+    if (cursor) {
+      links.push(cursor.value);
+      cursor.continue();
     } else {
-      save({ title, url, type });
-    }
-  }
-
-  function resizeImage(file, maxWidth, maxHeight, callback) {
-    const reader = new FileReader();
-    reader.onload = function (event) {
-      const img = new Image();
-      img.onload = function () {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
-
-        if (width > maxWidth) {
-          height *= maxWidth / width;
-          width = maxWidth;
-        }
-        if (height > maxHeight) {
-          width *= maxHeight / height;
-          height = maxHeight;
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        callback(canvas.toDataURL('image/jpeg', 0.7));
-      };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function deleteLink(indexInPage) {
-    getAllLinks((allLinks) => {
-      const globalIndex = (currentPage - 1) * itemsPerPage + indexInPage;
-      const item = allLinks[globalIndex];
-      if (!item) return;
-
-      if (confirm('Bạn có chắc muốn xóa link này?')) {
-        const store = db.transaction(['links'], 'readwrite').objectStore('links');
-        store.delete(item.id).onsuccess = () => {
-          renderLinks();
-        };
-      }
-    });
-  }
-
-  function getAllLinks(callback) {
-    const store = db.transaction(['links'], 'readonly').objectStore('links');
-    const request = store.getAll();
-    request.onsuccess = () => callback(request.result);
-  }
-
-  function getTotalPages(count) {
-    return Math.ceil(count / itemsPerPage) || 1;
-  }
-
-  function changePage(newPage) {
-    getAllLinks((allLinks) => {
-      const totalPages = getTotalPages(allLinks.length);
-      if (newPage >= 1 && newPage <= totalPages) {
-        currentPage = newPage;
-        renderLinks();
-      }
-    });
-  }
-
-  function jumpToPage() {
-    const pageInput = parseInt(document.getElementById('jumpToPage').value);
-    if (!isNaN(pageInput)) {
-      changePage(pageInput);
-    }
-  }
-
-  function renderLinks() {
-    const linksList = document.getElementById('linksList');
-    const currentDisplay = document.getElementById('currentPageDisplay');
-    const totalDisplay = document.getElementById('totalPagesDisplay');
-
-    getAllLinks((allLinks) => {
-      const totalPages = getTotalPages(allLinks.length);
+      const totalPages = Math.ceil(links.length / itemsPerPage);
+      currentPage = Math.min(currentPage, totalPages || 1);
       const start = (currentPage - 1) * itemsPerPage;
-      const currentLinks = allLinks.slice(start, start + itemsPerPage);
+      const visibleLinks = links.slice(start, start + itemsPerPage);
 
-      currentDisplay.innerText = currentPage;
-      totalDisplay.innerText = totalPages;
+      const list = document.getElementById('linksList');
+      list.innerHTML = visibleLinks.length === 0
+        ? '<div class="empty-state">Chưa có nội dung nào.</div>'
+        : visibleLinks.map(link => `
+          <div class="link-item">
+            <div class="link-info">
+              <span class="link-title">${link.title}</span>
+              <a class="link-url" href="${link.url}" target="_blank">${link.url}</a>
+              <span class="link-type">${link.type}</span>
+            </div>
+            <div class="link-actions">
+              ${link.imageData ? `<img src="${link.imageData}" style="max-width:60px;max-height:60px;border-radius:4px;margin-right:10px">` : ''}
+              <button onclick="deleteLink(${link.id})">Xóa</button>
+            </div>
+          </div>`).join('');
 
-      if (currentLinks.length === 0) {
-        linksList.innerHTML = '<div class="empty-state">Chưa có link nào được thêm</div>';
-        return;
-      }
+      document.getElementById('currentPageDisplay').textContent = currentPage;
+      document.getElementById('totalPagesDisplay').textContent = totalPages || 1;
+    }
+  };
+}
 
-      linksList.innerHTML = '';
-      currentLinks.forEach((link, index) => {
-        const linkItem = document.createElement('div');
-        linkItem.className = 'link-item';
-        linkItem.innerHTML = `
-          <div class="link-info">
-            ${link.imageData ? `<img src="${link.imageData}" alt="Ảnh ${link.title}" style="max-width:100px; max-height:100px; border-radius:4px; margin-right:10px;">` : ''}
-            <span class="link-title">${link.title}</span>
-            <span class="link-type">${link.type === 'truyen' ? 'Truyện' : 'Video'}</span>
-            <a href="${link.url}" target="_blank" class="link-url">${link.url}</a>
-          </div>
-          <div class="link-actions">
-            <button onclick="deleteLink(${index})">Xóa</button>
-          </div>
-        `;
-        linksList.appendChild(linkItem);
-      });
-    });
+function deleteLink(id) {
+  const tx = db.transaction(STORE_NAME, 'readwrite');
+  tx.objectStore(STORE_NAME).delete(id).onsuccess = () => renderLinks();
+}
+
+function changePage(page) {
+  currentPage = Math.max(1, page);
+  renderLinks();
+}
+
+function jumpToPage() {
+  const input = document.getElementById('jumpToPage');
+  const page = parseInt(input.value);
+  if (!isNaN(page)) {
+    currentPage = page;
+    renderLinks();
   }
-
-  function resetForm() {
-    document.getElementById('linkTitle').value = '';
-    document.getElementById('linkUrl').value = '';
-    document.getElementById('linkImage').value = '';
-  }
+}
 </script>
 </body>
 </html>
