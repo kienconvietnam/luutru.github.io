@@ -1,260 +1,387 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quản lý Truyện & Video</title>
   <style>
+    :root {
+      --primary-color: #1a1a1a;
+      --secondary-color: #2d2d2d;
+      --accent-color: #4CAF50;
+      --text-color: #f0f0f0;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #1a1a1a;
-      color: white;
+      background-color: var(--primary-color);
+      color: var(--text-color);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
       padding: 20px;
     }
-    h1, h2 {
-      color: #4CAF50;
-      cursor: default;
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
     }
-    input, select, button {
-      padding: 8px;
-      margin: 5px;
+
+    h1 {
+      margin-bottom: 20px;
+      color: var(--accent-color);
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    input, select {
+      flex-grow: 1;
+      padding: 10px 15px;
       border-radius: 5px;
       border: none;
-      font-size: 14px;
+      background-color: var(--secondary-color);
+      color: var(--text-color);
+      min-width: 200px;
     }
+
     button {
+      padding: 10px 15px;
+      border-radius: 5px;
+      border: none;
+      background-color: var(--accent-color);
+      color: white;
       cursor: pointer;
+      transition: opacity 0.3s;
+      font-weight: bold;
     }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .links-container {
+      background-color: var(--secondary-color);
+      border-radius: 8px;
+      padding: 20px;
+    }
+
     .link-item {
-      border: 1px solid #444;
-      padding: 10px;
-      border-radius: 6px;
-      margin-bottom: 10px;
-      background: #2d2d2d;
+      background-color: rgba(255, 255, 255, 0.05);
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 15px;
       display: flex;
       justify-content: space-between;
+      align-items: center;
+      transition: transform 0.2s;
     }
-    .link-actions button {
-      margin-left: 5px;
-      background-color: #4CAF50;
+
+    .link-item:hover {
+      transform: translateX(5px);
+    }
+
+    .link-info {
+      flex-grow: 1;
+    }
+
+    .link-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+      display: block;
+      color: var(--accent-color);
+    }
+
+    .link-url {
+      display: none;
+    }
+
+    .view-btn {
+      margin-top: 5px;
+      padding: 5px 10px;
+      font-size: 0.85em;
+      background-color: #2196F3;
       color: white;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
     }
-    .link-actions button.delete {
-      background-color: #f44336;
+
+    .link-type {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-size: 0.8em;
+      margin-left: 10px;
+      background-color: rgba(76, 175, 80, 0.2);
     }
-    .form-group {
-      margin-bottom: 10px;
+
+    .link-actions button {
+      background-color: #ff4444;
+      padding: 5px 10px;
+      margin-left: 10px;
     }
+
+    .empty-state {
+      text-align: center;
+      padding: 30px;
+      color: #777;
+    }
+
     .pagination {
       margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pagination input {
+      width: 50px;
       text-align: center;
     }
-    .toggle-btn {
-      background: none;
-      border: none;
-      color: #4CAF50;
-      font-size: 1.2em;
-      cursor: pointer;
-      margin-left: 10px;
+
+    @media (max-width: 768px) {
+      .input-row {
+        flex-direction: column;
+      }
+
+      .link-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .link-actions {
+        margin-top: 10px;
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>Quản lý Truyện & Video</h1>
-  <div class="form-group">
-    <input type="text" id="urlInput" placeholder="Dán link YouTube hoặc truyện..." style="width: 60%;" />
-    <select id="typeSelect">
-      <option value="truyen">Truyện</option>
-      <option value="video">Video</option>
-    </select>
-    <button onclick="addLink()">Thêm</button>
-  </div>
+  <div class="container">
+    <header>
+      <h1>Quản lý Truyện & Video</h1>
+    </header>
 
-  <div class="links-container">
-    <div>
-      <h2 onclick="toggleSection('truyen')">
-        Truyện <button class="toggle-btn" id="toggle-truyen">−</button>
-      </h2>
-      <div id="truyenList"></div>
+    <div class="input-group">
+      <div class="input-row">
+        <input type="text" id="linkTitle" placeholder="Nhập tiêu đề">
+        <input type="url" id="linkUrl" placeholder="Nhập link URL">
+        <select id="linkType">
+          <option value="truyen">Truyện</option>
+          <option value="video">Video</option>
+        </select>
+        <input type="file" id="linkImage" accept="image/*" style="display:none">
+        <button type="button" onclick="document.getElementById('linkImage').click()">Chọn ảnh</button>
+        <button onclick="addLink()">Thêm Link</button>
+      </div>
     </div>
-    <div>
-      <h2 onclick="toggleSection('video')">
-        Video <button class="toggle-btn" id="toggle-video">−</button>
-      </h2>
-      <div id="videoList"></div>
+
+    <div class="links-container">
+      <h2>Danh sách Links</h2>
+      <div id="linksList"></div>
+      <div class="pagination">
+        <button onclick="changePage(currentPage - 1)">◀</button>
+        <span>Trang <span id="currentPageDisplay">1</span> / <span id="totalPagesDisplay">1</span></span>
+        <button onclick="changePage(currentPage + 1)">▶</button>
+        <input type="number" id="jumpToPage" placeholder="Tới trang" min="1" onchange="jumpToPage()">
+      </div>
     </div>
   </div>
-
-  <div class="pagination">
-    <button onclick="changePage(currentPage - 1)">◀</button>
-    <span>Trang <span id="currentPageDisplay">1</span> / <span id="totalPagesDisplay">1</span></span>
-    <button onclick="changePage(currentPage + 1)">▶</button>
-    <input type="number" id="jumpToPage" placeholder="Tới trang" min="1" onchange="jumpToPage()" />
-  </div>
-
   <script>
-    let db, currentPage = 1, totalPages = 1, itemsPerPage = 15;
+    // Script hiển thị URL dưới dạng nút "Xem"
+    function createLinkElement(link) {
+      const item = document.createElement('div');
+      item.className = 'link-item';
 
-    async function initDB() {
-      return new Promise((resolve, reject) => {
-        const request = indexedDB.open("LinkDB", 1);
-        request.onerror = () => reject("Lỗi mở DB");
-        request.onsuccess = () => {
-          db = request.result;
-          resolve();
-        };
-        request.onupgradeneeded = (e) => {
-          const db = e.target.result;
-          const store = db.createObjectStore("links", { keyPath: "id", autoIncrement: true });
-          store.createIndex("type", "type", { unique: false });
-        };
-      });
+      const info = document.createElement('div');
+      info.className = 'link-info';
+      const title = document.createElement('span');
+      title.className = 'link-title';
+      title.textContent = link.title;
+
+      const viewBtn = document.createElement('button');
+      viewBtn.className = 'view-btn';
+      viewBtn.textContent = 'Xem';
+      viewBtn.onclick = () => window.open(link.url, '_blank');
+
+      const type = document.createElement('span');
+      type.className = 'link-type';
+      type.textContent = link.type;
+
+      info.appendChild(title);
+      info.appendChild(viewBtn);
+      info.appendChild(type);
+
+      const actions = document.createElement('div');
+      actions.className = 'link-actions';
+      const delBtn = document.createElement('button');
+      delBtn.textContent = 'Xóa';
+      delBtn.onclick = () => deleteLink(link.id);
+      actions.appendChild(delBtn);
+
+      item.appendChild(info);
+      item.appendChild(actions);
+      return item;
     }
+  
+  const dbName = 'LinksDB';
+  const storeName = 'links';
+  const itemsPerPage = 15;
+  let db, currentPage = 1, totalPages = 1;
 
-    async function getAllLinks() {
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction("links", "readonly");
-        const store = tx.objectStore("links");
-        const request = store.getAll();
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject();
-      });
-    }
+  window.onload = async () => {
+    await initDB();
+    await migrateFromLocalStorage(); // Tự động chuyển dữ liệu cũ sang nếu có
+    renderLinks();
+  };
 
-    async function addLink() {
-      const url = document.getElementById("urlInput").value.trim();
-      const type = document.getElementById("typeSelect").value;
-      if (!url) return alert("Vui lòng nhập link!");
+  function initDB() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(dbName, 1);
 
-      let title = url;
-      let image = "";
-
-      if (type === "video") {
-        const match = url.match(/(?:youtu\.be\/|v=)([^&]+)/);
-        if (match) {
-          const id = match[1];
-          image = `https://img.youtube.com/vi/${id}/mqdefault.jpg`;
-        }
-      }
-
-      try {
-        const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
-        const data = await res.json();
-        if (data && data.title) title = data.title;
-      } catch {}
-
-      const tx = db.transaction("links", "readwrite");
-      const store = tx.objectStore("links");
-      store.add({ url, type, title, image });
-      await tx.done;
-      document.getElementById("urlInput").value = "";
-      renderLinks();
-    }
-
-    async function deleteLink(id) {
-      const tx = db.transaction("links", "readwrite");
-      const store = tx.objectStore("links");
-      store.delete(id);
-      await tx.done;
-      renderLinks();
-    }
-
-    async function editLink(id) {
-      const tx = db.transaction("links", "readwrite");
-      const store = tx.objectStore("links");
-      const getRequest = store.get(id);
-      getRequest.onsuccess = async () => {
-        const item = getRequest.result;
-        const newTitle = prompt("Tiêu đề mới:", item.title);
-        const newUrl = prompt("Link mới:", item.url);
-        if (newTitle && newUrl) {
-          item.title = newTitle;
-          item.url = newUrl;
-          if (item.type === "video") {
-            const match = newUrl.match(/(?:youtu\.be\/|v=)([^&]+)/);
-            item.image = match ? `https://img.youtube.com/vi/${match[1]}/mqdefault.jpg` : "";
-          }
-          store.put(item);
-          await tx.done;
-          renderLinks();
-        }
+      request.onerror = () => reject('Không thể mở IndexedDB');
+      request.onsuccess = () => {
+        db = request.result;
+        resolve();
       };
+
+      request.onupgradeneeded = e => {
+        db = e.target.result;
+        db.createObjectStore(storeName, { keyPath: 'id', autoIncrement: true });
+      };
+    });
+  }
+
+  async function migrateFromLocalStorage() {
+    const oldData = JSON.parse(localStorage.getItem('links') || '[]');
+    if (oldData.length === 0) return;
+    for (const item of oldData) {
+      await addToDB(item);
     }
+    localStorage.removeItem('links');
+  }
 
-    async function renderLinks() {
-      const allLinks = await getAllLinks();
-      const truyenLinks = allLinks.filter(l => l.type === 'truyen');
-      const videoLinks = allLinks.filter(l => l.type === 'video');
+  function addToDB(data) {
+    return new Promise(resolve => {
+      const tx = db.transaction(storeName, 'readwrite');
+      const store = tx.objectStore(storeName);
+      store.add(data).onsuccess = resolve;
+    });
+  }
 
-      totalPages = Math.ceil(allLinks.length / itemsPerPage);
-      currentPage = Math.min(currentPage, totalPages || 1);
-      const start = (currentPage - 1) * itemsPerPage;
+  function getAllLinks() {
+    return new Promise(resolve => {
+      const tx = db.transaction(storeName, 'readonly');
+      const store = tx.objectStore(storeName);
+      const request = store.getAll();
+      request.onsuccess = () => resolve(request.result.reverse());
+    });
+  }
 
-      const truyenList = document.getElementById("truyenList");
-      const videoList = document.getElementById("videoList");
-      truyenList.innerHTML = "";
-      videoList.innerHTML = "";
+  function deleteLink(id) {
+    const tx = db.transaction(storeName, 'readwrite');
+    tx.objectStore(storeName).delete(id).onsuccess = renderLinks;
+  }
 
-      const pageTruyen = truyenLinks.slice(start, start + itemsPerPage);
-      const pageVideo = videoLinks.slice(start, start + itemsPerPage);
+  async function addLink() {
+    const title = document.getElementById('linkTitle').value.trim();
+    const url = document.getElementById('linkUrl').value.trim();
+    const type = document.getElementById('linkType').value;
+    const imgInput = document.getElementById('linkImage');
+    let image = '';
 
-      const createHTML = (items) => items.map(item => `
-        <div class="link-item">
-          <div>
-            <strong>${item.title}</strong><br/>
-            <a href="${item.url}" target="_blank">${item.url}</a><br/>
-            ${item.image ? `<img src="${item.image}" width="120" style="margin-top:8px;border-radius:8px;">` : ""}
-          </div>
-          <div class="link-actions">
-            <button onclick="editLink(${item.id})">Sửa</button>
-            <button class="delete" onclick="deleteLink(${item.id})">Xóa</button>
-          </div>
+    if (imgInput.files.length > 0) {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        image = reader.result;
+        await addToDB({ title, url, type, image });
+        clearInputs();
+        renderLinks();
+      };
+      reader.readAsDataURL(imgInput.files[0]);
+    } else {
+      await addToDB({ title, url, type, image });
+      clearInputs();
+      renderLinks();
+    }
+  }
+
+  function clearInputs() {
+    document.getElementById('linkTitle').value = '';
+    document.getElementById('linkUrl').value = '';
+    document.getElementById('linkImage').value = '';
+  }
+
+  async function renderLinks() {
+    const list = document.getElementById('linksList');
+    const allLinks = await getAllLinks();
+    totalPages = Math.ceil(allLinks.length / itemsPerPage);
+    currentPage = Math.min(currentPage, totalPages || 1);
+    const start = (currentPage - 1) * itemsPerPage;
+    const pageLinks = allLinks.slice(start, start + itemsPerPage);
+
+    document.getElementById('currentPageDisplay').innerText = currentPage;
+    document.getElementById('totalPagesDisplay').innerText = totalPages || 1;
+
+    list.innerHTML = pageLinks.map(item => `
+      <div class="link-item">
+        <div class="link-info">
+          <span class="link-title">${item.title || '(Không tiêu đề)'}</span>
+          <span class="link-type">${item.type}</span>
+          ${item.image ? `<img src="${item.image}" alt="thumb" width="100" style="margin-top:10px;border-radius:6px;">` : ''}
+          <br>
+          <button class="view-btn" onclick="window.open('${item.url}', '_blank')">Xem</button>
         </div>
-      `).join('');
+        <div class="link-actions">
+          <button onclick="deleteLink(${item.id})">Xóa</button>
+        </div>
+      </div>
+    `).join('');
 
-      truyenList.innerHTML = pageTruyen.length ? createHTML(pageTruyen) : "Không có truyện nào.";
-      videoList.innerHTML = pageVideo.length ? createHTML(pageVideo) : "Không có video nào.";
-
-      document.getElementById("currentPageDisplay").innerText = currentPage;
-      document.getElementById("totalPagesDisplay").innerText = totalPages || 1;
+    if (pageLinks.length === 0) {
+      list.innerHTML = `<div class="empty-state">Chưa có link nào.</div>`;
     }
+  }
 
-    function changePage(page) {
-      if (page < 1 || page > totalPages) return;
-      currentPage = page;
+  function changePage(newPage) {
+    if (newPage < 1 || newPage > totalPages) return;
+    currentPage = newPage;
+    renderLinks();
+  }
+
+  function jumpToPage() {
+    const input = document.getElementById('jumpToPage');
+    const value = parseInt(input.value);
+    if (value >= 1 && value <= totalPages) {
+      currentPage = value;
       renderLinks();
     }
+  }
 
-    function jumpToPage() {
-      const page = parseInt(document.getElementById("jumpToPage").value);
-      if (!isNaN(page)) changePage(page);
-    }
-
-    function toggleSection(type) {
-      const list = document.getElementById(type + "List");
-      const btn = document.getElementById("toggle-" + type);
-      const key = `collapsed-${type}`;
-      const isHidden = list.style.display === "none";
-      list.style.display = isHidden ? "" : "none";
-      btn.textContent = isHidden ? "−" : "+";
-      localStorage.setItem(key, isHidden ? "false" : "true");
-    }
-
-    function restoreCollapsedState() {
-      ["truyen", "video"].forEach(type => {
-        const isCollapsed = localStorage.getItem(`collapsed-${type}`) === "true";
-        const list = document.getElementById(type + "List");
-        const btn = document.getElementById("toggle-" + type);
-        list.style.display = isCollapsed ? "none" : "";
-        btn.textContent = isCollapsed ? "+" : "−";
-      });
-    }
-
-    window.onload = async () => {
-      await initDB();
-      restoreCollapsedState();
-      renderLinks();
-    };
   </script>
 </body>
 </html>
