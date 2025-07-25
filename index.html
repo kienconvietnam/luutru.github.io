@@ -111,10 +111,6 @@
       color: var(--accent-color);
     }
 
-    .link-url {
-      display: none;
-    }
-
     .view-btn {
       margin-top: 5px;
       padding: 5px 10px;
@@ -161,6 +157,15 @@
       text-align: center;
     }
 
+    .toggle-btn {
+      background: none;
+      border: none;
+      color: var(--accent-color);
+      font-size: 1.2em;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+
     @media (max-width: 768px) {
       .input-row {
         flex-direction: column;
@@ -201,187 +206,180 @@
     </div>
 
     <div class="links-container">
-      <h2>Danh sách Links</h2>
-      <div id="linksList"></div>
-      <div class="pagination">
-        <button onclick="changePage(currentPage - 1)">◀</button>
-        <span>Trang <span id="currentPageDisplay">1</span> / <span id="totalPagesDisplay">1</span></span>
-        <button onclick="changePage(currentPage + 1)">▶</button>
-        <input type="number" id="jumpToPage" placeholder="Tới trang" min="1" onchange="jumpToPage()">
+      <div>
+        <h2 onclick="toggleSection('truyen')">
+          Truyện <button class="toggle-btn" id="toggle-truyen">−</button>
+        </h2>
+        <div id="truyenList"></div>
+      </div>
+      <div>
+        <h2 onclick="toggleSection('video')">
+          Video <button class="toggle-btn" id="toggle-video">−</button>
+        </h2>
+        <div id="videoList"></div>
       </div>
     </div>
+
+    <div class="pagination">
+      <button onclick="changePage(currentPage - 1)">◀</button>
+      <span>Trang <span id="currentPageDisplay">1</span> / <span id="totalPagesDisplay">1</span></span>
+      <button onclick="changePage(currentPage + 1)">▶</button>
+      <input type="number" id="jumpToPage" placeholder="Tới trang" min="1" onchange="jumpToPage()">
+    </div>
   </div>
+
   <script>
-    // Script hiển thị URL dưới dạng nút "Xem"
-    function createLinkElement(link) {
-      const item = document.createElement('div');
-      item.className = 'link-item';
+    const dbName = 'LinksDB';
+    const storeName = 'links';
+    const itemsPerPage = 15;
+    let db, currentPage = 1, totalPages = 1;
 
-      const info = document.createElement('div');
-      info.className = 'link-info';
-      const title = document.createElement('span');
-      title.className = 'link-title';
-      title.textContent = link.title;
+    window.onload = async () => {
+      await initDB();
+      await migrateFromLocalStorage();
+      renderLinks();
+    };
 
-      const viewBtn = document.createElement('button');
-      viewBtn.className = 'view-btn';
-      viewBtn.textContent = 'Xem';
-      viewBtn.onclick = () => window.open(link.url, '_blank');
-
-      const type = document.createElement('span');
-      type.className = 'link-type';
-      type.textContent = link.type;
-
-      info.appendChild(title);
-      info.appendChild(viewBtn);
-      info.appendChild(type);
-
-      const actions = document.createElement('div');
-      actions.className = 'link-actions';
-      const delBtn = document.createElement('button');
-      delBtn.textContent = 'Xóa';
-      delBtn.onclick = () => deleteLink(link.id);
-      actions.appendChild(delBtn);
-
-      item.appendChild(info);
-      item.appendChild(actions);
-      return item;
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(dbName, 1);
+        request.onerror = () => reject('Không thể mở IndexedDB');
+        request.onsuccess = () => {
+          db = request.result;
+          resolve();
+        };
+        request.onupgradeneeded = e => {
+          db = e.target.result;
+          db.createObjectStore(storeName, { keyPath: 'id', autoIncrement: true });
+        };
+      });
     }
-  
-  const dbName = 'LinksDB';
-  const storeName = 'links';
-  const itemsPerPage = 15;
-  let db, currentPage = 1, totalPages = 1;
 
-  window.onload = async () => {
-    await initDB();
-    await migrateFromLocalStorage(); // Tự động chuyển dữ liệu cũ sang nếu có
-    renderLinks();
-  };
-
-  function initDB() {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(dbName, 1);
-
-      request.onerror = () => reject('Không thể mở IndexedDB');
-      request.onsuccess = () => {
-        db = request.result;
-        resolve();
-      };
-
-      request.onupgradeneeded = e => {
-        db = e.target.result;
-        db.createObjectStore(storeName, { keyPath: 'id', autoIncrement: true });
-      };
-    });
-  }
-
-  async function migrateFromLocalStorage() {
-    const oldData = JSON.parse(localStorage.getItem('links') || '[]');
-    if (oldData.length === 0) return;
-    for (const item of oldData) {
-      await addToDB(item);
+    async function migrateFromLocalStorage() {
+      const oldData = JSON.parse(localStorage.getItem('links') || '[]');
+      if (oldData.length === 0) return;
+      for (const item of oldData) {
+        await addToDB(item);
+      }
+      localStorage.removeItem('links');
     }
-    localStorage.removeItem('links');
-  }
 
-  function addToDB(data) {
-    return new Promise(resolve => {
+    function addToDB(data) {
+      return new Promise(resolve => {
+        const tx = db.transaction(storeName, 'readwrite');
+        const store = tx.objectStore(storeName);
+        store.add(data).onsuccess = resolve;
+      });
+    }
+
+    function getAllLinks() {
+      return new Promise(resolve => {
+        const tx = db.transaction(storeName, 'readonly');
+        const store = tx.objectStore(storeName);
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result.reverse());
+      });
+    }
+
+    function deleteLink(id) {
       const tx = db.transaction(storeName, 'readwrite');
-      const store = tx.objectStore(storeName);
-      store.add(data).onsuccess = resolve;
-    });
-  }
+      tx.objectStore(storeName).delete(id).onsuccess = renderLinks;
+    }
 
-  function getAllLinks() {
-    return new Promise(resolve => {
-      const tx = db.transaction(storeName, 'readonly');
-      const store = tx.objectStore(storeName);
-      const request = store.getAll();
-      request.onsuccess = () => resolve(request.result.reverse());
-    });
-  }
+    async function addLink() {
+      const title = document.getElementById('linkTitle').value.trim();
+      const url = document.getElementById('linkUrl').value.trim();
+      const type = document.getElementById('linkType').value;
+      const imgInput = document.getElementById('linkImage');
+      let image = '';
 
-  function deleteLink(id) {
-    const tx = db.transaction(storeName, 'readwrite');
-    tx.objectStore(storeName).delete(id).onsuccess = renderLinks;
-  }
-
-  async function addLink() {
-    const title = document.getElementById('linkTitle').value.trim();
-    const url = document.getElementById('linkUrl').value.trim();
-    const type = document.getElementById('linkType').value;
-    const imgInput = document.getElementById('linkImage');
-    let image = '';
-
-    if (imgInput.files.length > 0) {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        image = reader.result;
+      if (imgInput.files.length > 0) {
+        const reader = new FileReader();
+        reader.onload = async () => {
+          image = reader.result;
+          await addToDB({ title, url, type, image });
+          clearInputs();
+          renderLinks();
+        };
+        reader.readAsDataURL(imgInput.files[0]);
+      } else {
         await addToDB({ title, url, type, image });
         clearInputs();
         renderLinks();
-      };
-      reader.readAsDataURL(imgInput.files[0]);
-    } else {
-      await addToDB({ title, url, type, image });
-      clearInputs();
+      }
+    }
+
+    function clearInputs() {
+      document.getElementById('linkTitle').value = '';
+      document.getElementById('linkUrl').value = '';
+      document.getElementById('linkImage').value = '';
+    }
+
+    async function renderLinks() {
+      const allLinks = await getAllLinks();
+      const truyenLinks = allLinks.filter(l => l.type === 'truyen');
+      const videoLinks = allLinks.filter(l => l.type === 'video');
+
+      totalPages = Math.ceil(allLinks.length / itemsPerPage);
+      currentPage = Math.min(currentPage, totalPages || 1);
+      const start = (currentPage - 1) * itemsPerPage;
+
+      const pageTruyen = truyenLinks.slice(start, start + itemsPerPage);
+      const pageVideo = videoLinks.slice(start, start + itemsPerPage);
+
+      const truyenList = document.getElementById('truyenList');
+      const videoList = document.getElementById('videoList');
+      truyenList.innerHTML = '';
+      videoList.innerHTML = '';
+
+      const createHTML = (items) => items.map(item => `
+        <div class="link-item">
+          <div class="link-info">
+            <span class="link-title">${item.title || '(Không tiêu đề)'}</span>
+            <span class="link-type">${item.type}</span>
+            ${item.image ? `<img src="${item.image}" alt="thumb" width="100" style="margin-top:10px;border-radius:6px;">` : ''}
+            <br>
+            <button class="view-btn" onclick="window.open('${item.url}', '_blank')">Xem</button>
+          </div>
+          <div class="link-actions">
+            <button onclick="deleteLink(${item.id})">Xóa</button>
+          </div>
+        </div>
+      `).join('');
+
+      truyenList.innerHTML = pageTruyen.length ? createHTML(pageTruyen) : `<div class="empty-state">Không có truyện.</div>`;
+      videoList.innerHTML = pageVideo.length ? createHTML(pageVideo) : `<div class="empty-state">Không có video.</div>`;
+
+      document.getElementById('currentPageDisplay').innerText = currentPage;
+      document.getElementById('totalPagesDisplay').innerText = totalPages || 1;
+    }
+
+    function changePage(newPage) {
+      if (newPage < 1 || newPage > totalPages) return;
+      currentPage = newPage;
       renderLinks();
     }
-  }
 
-  function clearInputs() {
-    document.getElementById('linkTitle').value = '';
-    document.getElementById('linkUrl').value = '';
-    document.getElementById('linkImage').value = '';
-  }
-
-  async function renderLinks() {
-    const list = document.getElementById('linksList');
-    const allLinks = await getAllLinks();
-    totalPages = Math.ceil(allLinks.length / itemsPerPage);
-    currentPage = Math.min(currentPage, totalPages || 1);
-    const start = (currentPage - 1) * itemsPerPage;
-    const pageLinks = allLinks.slice(start, start + itemsPerPage);
-
-    document.getElementById('currentPageDisplay').innerText = currentPage;
-    document.getElementById('totalPagesDisplay').innerText = totalPages || 1;
-
-    list.innerHTML = pageLinks.map(item => `
-      <div class="link-item">
-        <div class="link-info">
-          <span class="link-title">${item.title || '(Không tiêu đề)'}</span>
-          <span class="link-type">${item.type}</span>
-          ${item.image ? `<img src="${item.image}" alt="thumb" width="100" style="margin-top:10px;border-radius:6px;">` : ''}
-          <br>
-          <button class="view-btn" onclick="window.open('${item.url}', '_blank')">Xem</button>
-        </div>
-        <div class="link-actions">
-          <button onclick="deleteLink(${item.id})">Xóa</button>
-        </div>
-      </div>
-    `).join('');
-
-    if (pageLinks.length === 0) {
-      list.innerHTML = `<div class="empty-state">Chưa có link nào.</div>`;
+    function jumpToPage() {
+      const input = document.getElementById('jumpToPage');
+      const value = parseInt(input.value);
+      if (value >= 1 && value <= totalPages) {
+        currentPage = value;
+        renderLinks();
+      }
     }
-  }
 
-  function changePage(newPage) {
-    if (newPage < 1 || newPage > totalPages) return;
-    currentPage = newPage;
-    renderLinks();
-  }
-
-  function jumpToPage() {
-    const input = document.getElementById('jumpToPage');
-    const value = parseInt(input.value);
-    if (value >= 1 && value <= totalPages) {
-      currentPage = value;
-      renderLinks();
+    function toggleSection(type) {
+      const list = document.getElementById(type + 'List');
+      const btn = document.getElementById('toggle-' + type);
+      if (list.style.display === 'none') {
+        list.style.display = '';
+        btn.textContent = '−';
+      } else {
+        list.style.display = 'none';
+        btn.textContent = '+';
+      }
     }
-  }
-
   </script>
 </body>
 </html>
