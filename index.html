@@ -237,6 +237,7 @@
     window.onload = async () => {
       await initDB();
       await migrateFromLocalStorage();
+      restoreCollapsedState(); // Gọi khôi phục trạng thái thu gọn
       renderLinks();
     };
 
@@ -372,13 +373,33 @@
     function toggleSection(type) {
       const list = document.getElementById(type + 'List');
       const btn = document.getElementById('toggle-' + type);
-      if (list.style.display === 'none') {
+      const key = `collapsed-${type}`;
+      const isCollapsed = list.style.display === 'none';
+
+      if (isCollapsed) {
         list.style.display = '';
         btn.textContent = '−';
+        localStorage.setItem(key, 'false');
       } else {
         list.style.display = 'none';
         btn.textContent = '+';
+        localStorage.setItem(key, 'true');
       }
+    }
+
+    function restoreCollapsedState() {
+      ['truyen', 'video'].forEach(type => {
+        const list = document.getElementById(type + 'List');
+        const btn = document.getElementById('toggle-' + type);
+        const isCollapsed = localStorage.getItem(`collapsed-${type}`) === 'true';
+        if (isCollapsed) {
+          list.style.display = 'none';
+          btn.textContent = '+';
+        } else {
+          list.style.display = '';
+          btn.textContent = '−';
+        }
+      });
     }
   </script>
 </body>
