@@ -85,15 +85,22 @@
       padding: 20px;
     }
 
+    #truyenList, #videoList {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
     .link-item {
       background-color: rgba(255, 255, 255, 0.05);
       padding: 15px;
       border-radius: 5px;
-      margin-bottom: 15px;
       display: flex;
+      flex-direction: column;
       justify-content: space-between;
-      align-items: center;
       transition: transform 0.2s;
+      width: calc(50% - 7.5px);
+      min-height: 320px;
     }
 
     .link-item:hover {
@@ -134,13 +141,14 @@
     .link-actions button {
       background-color: #ff4444;
       padding: 5px 10px;
-      margin-left: 10px;
+      margin-top: 10px;
     }
 
     .empty-state {
       text-align: center;
       padding: 30px;
       color: #777;
+      width: 100%;
     }
 
     .pagination {
@@ -172,12 +180,10 @@
       }
 
       .link-item {
-        flex-direction: column;
-        align-items: flex-start;
+        width: 100%;
       }
 
       .link-actions {
-        margin-top: 10px;
         width: 100%;
         display: flex;
         justify-content: flex-end;
@@ -231,13 +237,12 @@
   <script>
     const dbName = 'LinksDB';
     const storeName = 'links';
-    const itemsPerPage = 15;
     let db, currentPage = 1, totalPages = 1;
 
     window.onload = async () => {
       await initDB();
       await migrateFromLocalStorage();
-      restoreCollapsedState(); // Gọi khôi phục trạng thái thu gọn
+      restoreCollapsedState();
       renderLinks();
     };
 
@@ -321,12 +326,13 @@
       const truyenLinks = allLinks.filter(l => l.type === 'truyen');
       const videoLinks = allLinks.filter(l => l.type === 'video');
 
-      totalPages = Math.ceil(allLinks.length / itemsPerPage);
+      totalPages = Math.ceil(Math.max(truyenLinks.length, videoLinks.length) / 10);
       currentPage = Math.min(currentPage, totalPages || 1);
-      const start = (currentPage - 1) * itemsPerPage;
+      const truyenStart = (currentPage - 1) * 10;
+      const videoStart = (currentPage - 1) * 10;
 
-      const pageTruyen = truyenLinks.slice(start, start + itemsPerPage);
-      const pageVideo = videoLinks.slice(start, start + itemsPerPage);
+      const pageTruyen = truyenLinks.slice(truyenStart, truyenStart + 10);
+      const pageVideo = videoLinks.slice(videoStart, videoStart + 10);
 
       const truyenList = document.getElementById('truyenList');
       const videoList = document.getElementById('videoList');
@@ -338,7 +344,7 @@
           <div class="link-info">
             <span class="link-title">${item.title || '(Không tiêu đề)'}</span>
             <span class="link-type">${item.type}</span>
-            ${item.image ? `<img src="${item.image}" alt="thumb" width="100" style="margin-top:10px;border-radius:6px;">` : ''}
+            ${item.image ? `<img src="${item.image}" alt="thumb" style="max-height: 120px; width: auto; margin-top:10px; border-radius:6px;">` : ''}
             <br>
             <button class="view-btn" onclick="window.open('${item.url}', '_blank')">Xem</button>
           </div>
