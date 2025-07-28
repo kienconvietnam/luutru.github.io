@@ -152,9 +152,8 @@
       flex-wrap: wrap;
     }
 
-    .pagination input {
-      width: 50px;
-      text-align: center;
+    .pagination span {
+      font-weight: bold;
     }
 
     .toggle-btn {
@@ -200,8 +199,7 @@
           <option value="video">Video</option>
         </select>
         <input type="file" id="linkImage" accept="image/*" style="display:none">
-        <!-- Thêm sau input ảnh và trước nút chọn ảnh -->
-<span id="imageSelectedText" style="color: #4CAF50; font-size: 0.9em; margin-top: 5px;"></span>
+        <span id="imageSelectedText" style="color: #4CAF50; font-size: 0.9em; margin-top: 5px;"></span>
         <button type="button" onclick="document.getElementById('linkImage').click()">Chọn ảnh</button>
         <button onclick="addLink()">Thêm Link</button>
       </div>
@@ -213,247 +211,254 @@
           Truyện <button class="toggle-btn" id="toggle-truyen">−</button>
         </h2>
         <div id="truyenList"></div>
+        <div class="pagination">
+          <button onclick="changePage('truyen', currentPageTruyen - 1)">◀</button>
+          <span>Trang <span id="currentPageTruyen">1</span> / <span id="totalPagesTruyen">1</span></span>
+          <button onclick="changePage('truyen', currentPageTruyen + 1)">▶</button>
+        </div>
       </div>
       <div>
         <h2 onclick="toggleSection('video')">
           Video <button class="toggle-btn" id="toggle-video">−</button>
         </h2>
         <div id="videoList"></div>
+        <div class="pagination">
+          <button onclick="changePage('video', currentPageVideo - 1)">◀</button>
+          <span>Trang <span id="currentPageVideo">1</span> / <span id="totalPagesVideo">1</span></span>
+          <button onclick="changePage('video', currentPageVideo + 1)">▶</button>
+        </div>
       </div>
-    </div>
-
-    <div class="pagination">
-      <button onclick="changePage(currentPage - 1)">◀</button>
-      <span>Trang <span id="currentPageDisplay">1</span> / <span id="totalPagesDisplay">1</span></span>
-      <button onclick="changePage(currentPage + 1)">▶</button>
-      <input type="number" id="jumpToPage" placeholder="Tới trang" min="1" onchange="jumpToPage()">
     </div>
   </div>
 
+  <div id="statusMessage" style="
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(76, 175, 80, 0.95);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    display: none;
+    z-index: 9999;
+    font-weight: bold;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  "></div>
+
   <script>
-  const dbName = 'LinksDB';
-  const storeName = 'links';
-  const itemsPerPage = 15;
-  let db, currentPage = 1, totalPages = 1;
+    const dbName = 'LinksDB';
+    const storeName = 'links';
+    const itemsPerPage = 15;
+    let db;
+    let currentPageTruyen = 1, totalPagesTruyen = 1;
+    let currentPageVideo = 1, totalPagesVideo = 1;
 
-  window.onload = async () => {
-    await initDB();
-    await migrateFromLocalStorage();
-    restoreCollapsedState();
-    renderLinks();
-    setupImageSelectionText();
-  };
-
-  function initDB() {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(dbName, 1);
-      request.onerror = () => reject('Không thể mở IndexedDB');
-      request.onsuccess = () => {
-        db = request.result;
-        resolve();
-      };
-      request.onupgradeneeded = e => {
-        db = e.target.result;
-        db.createObjectStore(storeName, { keyPath: 'id', autoIncrement: true });
-      };
-    });
-  }
-
-  async function migrateFromLocalStorage() {
-    const oldData = JSON.parse(localStorage.getItem('links') || '[]');
-    if (oldData.length === 0) return;
-    for (const item of oldData) {
-      await addToDB(item);
-    }
-    localStorage.removeItem('links');
-  }
-
-  function addToDB(data) {
-    return new Promise(resolve => {
-      const tx = db.transaction(storeName, 'readwrite');
-      const store = tx.objectStore(storeName);
-      store.add(data).onsuccess = resolve;
-    });
-  }
-
-  function getAllLinks() {
-    return new Promise(resolve => {
-      const tx = db.transaction(storeName, 'readonly');
-      const store = tx.objectStore(storeName);
-      const request = store.getAll();
-      request.onsuccess = () => resolve(request.result.reverse());
-    });
-  }
-
-  function deleteLink(id) {
-    const tx = db.transaction(storeName, 'readwrite');
-    tx.objectStore(storeName).delete(id).onsuccess = () => {
-      showStatus("Xóa thành công!");
+    window.onload = async () => {
+      await initDB();
+      await migrateFromLocalStorage();
+      restoreCollapsedState();
       renderLinks();
+      setupImageSelectionText();
     };
-  }
 
-  async function addLink() {
-    const title = document.getElementById('linkTitle').value.trim();
-    const url = document.getElementById('linkUrl').value.trim();
-    const type = document.getElementById('linkType').value;
-    const imgInput = document.getElementById('linkImage');
-    let image = '';
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(dbName, 1);
+        request.onerror = () => reject('Không thể mở IndexedDB');
+        request.onsuccess = () => {
+          db = request.result;
+          resolve();
+        };
+        request.onupgradeneeded = e => {
+          db = e.target.result;
+          db.createObjectStore(storeName, { keyPath: 'id', autoIncrement: true });
+        };
+      });
+    }
 
-    if (imgInput.files.length > 0) {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        image = reader.result;
+    async function migrateFromLocalStorage() {
+      const oldData = JSON.parse(localStorage.getItem('links') || '[]');
+      if (oldData.length === 0) return;
+      for (const item of oldData) {
+        await addToDB(item);
+      }
+      localStorage.removeItem('links');
+    }
+
+    function addToDB(data) {
+      return new Promise(resolve => {
+        const tx = db.transaction(storeName, 'readwrite');
+        const store = tx.objectStore(storeName);
+        store.add(data).onsuccess = resolve;
+      });
+    }
+
+    function getAllLinks() {
+      return new Promise(resolve => {
+        const tx = db.transaction(storeName, 'readonly');
+        const store = tx.objectStore(storeName);
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result.reverse());
+      });
+    }
+
+    function deleteLink(id) {
+      const tx = db.transaction(storeName, 'readwrite');
+      tx.objectStore(storeName).delete(id).onsuccess = () => {
+        showStatus("Xóa thành công!");
+        renderLinks();
+      };
+    }
+
+    async function addLink() {
+      const title = document.getElementById('linkTitle').value.trim();
+      const url = document.getElementById('linkUrl').value.trim();
+      const type = document.getElementById('linkType').value;
+      const imgInput = document.getElementById('linkImage');
+      let image = '';
+
+      if (imgInput.files.length > 0) {
+        const reader = new FileReader();
+        reader.onload = async () => {
+          image = reader.result;
+          await addToDB({ title, url, type, image });
+          clearInputs();
+          showStatus(`${type === 'truyen' ? 'Truyện' : 'Video'} đã được lưu!`);
+          renderLinks();
+        };
+        reader.readAsDataURL(imgInput.files[0]);
+      } else {
         await addToDB({ title, url, type, image });
         clearInputs();
         showStatus(`${type === 'truyen' ? 'Truyện' : 'Video'} đã được lưu!`);
         renderLinks();
-      };
-      reader.readAsDataURL(imgInput.files[0]);
-    } else {
-      await addToDB({ title, url, type, image });
-      clearInputs();
-      showStatus(`${type === 'truyen' ? 'Truyện' : 'Video'} đã được lưu!`);
+      }
+    }
+
+    function clearInputs() {
+      document.getElementById('linkTitle').value = '';
+      document.getElementById('linkUrl').value = '';
+      document.getElementById('linkImage').value = '';
+      document.getElementById('imageSelectedText').textContent = '';
+    }
+
+    async function renderLinks() {
+      const allLinks = await getAllLinks();
+      const truyenLinks = allLinks.filter(l => l.type === 'truyen');
+      const videoLinks = allLinks.filter(l => l.type === 'video');
+
+      totalPagesTruyen = Math.ceil(truyenLinks.length / itemsPerPage);
+      totalPagesVideo = Math.ceil(videoLinks.length / itemsPerPage);
+
+      currentPageTruyen = Math.min(currentPageTruyen, totalPagesTruyen || 1);
+      currentPageVideo = Math.min(currentPageVideo, totalPagesVideo || 1);
+
+      const startTruyen = (currentPageTruyen - 1) * itemsPerPage;
+      const startVideo = (currentPageVideo - 1) * itemsPerPage;
+
+      const pageTruyen = truyenLinks.slice(startTruyen, startTruyen + itemsPerPage);
+      const pageVideo = videoLinks.slice(startVideo, startVideo + itemsPerPage);
+
+      const truyenList = document.getElementById('truyenList');
+      const videoList = document.getElementById('videoList');
+      truyenList.innerHTML = '';
+      videoList.innerHTML = '';
+
+      const createHTML = (items) => items.map(item => `
+        <div class="link-item">
+          <div class="link-info">
+            <span class="link-title" id="title-${item.id}">${item.title || '(Không tiêu đề)'}</span>
+            <span class="link-type">${item.type}</span>
+            ${item.image ? `<img src="${item.image}" alt="thumb" width="100" style="margin-top:10px;border-radius:6px;">` : ''}
+            <br>
+            <button class="view-btn" onclick="markAsViewed(${item.id}); window.open('${item.url}', '_blank')">Xem</button>
+          </div>
+          <div class="link-actions">
+            <button onclick="deleteLink(${item.id})">Xóa</button>
+          </div>
+        </div>
+      `).join('');
+
+      truyenList.innerHTML = pageTruyen.length ? createHTML(pageTruyen) : `<div class="empty-state">Không có truyện.</div>`;
+      videoList.innerHTML = pageVideo.length ? createHTML(pageVideo) : `<div class="empty-state">Không có video.</div>`;
+
+      document.getElementById('currentPageTruyen').innerText = currentPageTruyen;
+      document.getElementById('totalPagesTruyen').innerText = totalPagesTruyen || 1;
+      document.getElementById('currentPageVideo').innerText = currentPageVideo;
+      document.getElementById('totalPagesVideo').innerText = totalPagesVideo || 1;
+    }
+
+    function changePage(type, newPage) {
+      if (type === 'truyen') {
+        if (newPage < 1 || newPage > totalPagesTruyen) return;
+        currentPageTruyen = newPage;
+      } else {
+        if (newPage < 1 || newPage > totalPagesVideo) return;
+        currentPageVideo = newPage;
+      }
       renderLinks();
     }
-  }
 
-  function clearInputs() {
-    document.getElementById('linkTitle').value = '';
-    document.getElementById('linkUrl').value = '';
-    document.getElementById('linkImage').value = '';
-    document.getElementById('imageSelectedText').textContent = '';
-  }
-
-  async function renderLinks() {
-    const allLinks = await getAllLinks();
-    const truyenLinks = allLinks.filter(l => l.type === 'truyen');
-    const videoLinks = allLinks.filter(l => l.type === 'video');
-
-    totalPages = Math.ceil(allLinks.length / itemsPerPage);
-    currentPage = Math.min(currentPage, totalPages || 1);
-    const start = (currentPage - 1) * itemsPerPage;
-
-    const pageTruyen = truyenLinks.slice(start, start + itemsPerPage);
-    const pageVideo = videoLinks.slice(start, start + itemsPerPage);
-
-    const truyenList = document.getElementById('truyenList');
-    const videoList = document.getElementById('videoList');
-    truyenList.innerHTML = '';
-    videoList.innerHTML = '';
-
-    const createHTML = (items) => items.map(item => `
-      <div class="link-item">
-        <div class="link-info">
-          <span class="link-title" id="title-${item.id}">${item.title || '(Không tiêu đề)'}</span>
-          <span class="link-type">${item.type}</span>
-          ${item.image ? `<img src="${item.image}" alt="thumb" width="100" style="margin-top:10px;border-radius:6px;">` : ''}
-          <br>
-          <button class="view-btn" onclick="markAsViewed(${item.id}); window.open('${item.url}', '_blank')">Xem</button>
-        </div>
-        <div class="link-actions">
-          <button onclick="deleteLink(${item.id})">Xóa</button>
-        </div>
-      </div>
-    `).join('');
-
-    truyenList.innerHTML = pageTruyen.length ? createHTML(pageTruyen) : `<div class="empty-state">Không có truyện.</div>`;
-    videoList.innerHTML = pageVideo.length ? createHTML(pageVideo) : `<div class="empty-state">Không có video.</div>`;
-
-    document.getElementById('currentPageDisplay').innerText = currentPage;
-    document.getElementById('totalPagesDisplay').innerText = totalPages || 1;
-  }
-
-  function changePage(newPage) {
-    if (newPage < 1 || newPage > totalPages) return;
-    currentPage = newPage;
-    renderLinks();
-  }
-
-  function jumpToPage() {
-    const input = document.getElementById('jumpToPage');
-    const value = parseInt(input.value);
-    if (value >= 1 && value <= totalPages) {
-      currentPage = value;
-      renderLinks();
-    }
-  }
-
-  function toggleSection(type) {
-    const list = document.getElementById(type + 'List');
-    const btn = document.getElementById('toggle-' + type);
-    const key = `collapsed-${type}`;
-    const isCollapsed = list.style.display === 'none';
-
-    if (isCollapsed) {
-      list.style.display = '';
-      btn.textContent = '−';
-      localStorage.setItem(key, 'false');
-    } else {
-      list.style.display = 'none';
-      btn.textContent = '+';
-      localStorage.setItem(key, 'true');
-    }
-  }
-
-  function restoreCollapsedState() {
-    ['truyen', 'video'].forEach(type => {
+    function toggleSection(type) {
       const list = document.getElementById(type + 'List');
       const btn = document.getElementById('toggle-' + type);
-      const isCollapsed = localStorage.getItem(`collapsed-${type}`) === 'true';
+      const key = `collapsed-${type}`;
+      const isCollapsed = list.style.display === 'none';
+
       if (isCollapsed) {
-        list.style.display = 'none';
-        btn.textContent = '+';
-      } else {
         list.style.display = '';
         btn.textContent = '−';
-      }
-    });
-  }
-
-  function setupImageSelectionText() {
-    const imgInput = document.getElementById('linkImage');
-    const text = document.getElementById('imageSelectedText');
-    imgInput.addEventListener('change', () => {
-      if (imgInput.files.length > 0) {
-        text.textContent = 'Đã chọn ảnh thành công!';
+        localStorage.setItem(key, 'false');
       } else {
-        text.textContent = '';
+        list.style.display = 'none';
+        btn.textContent = '+';
+        localStorage.setItem(key, 'true');
       }
-    });
-  }
-
-  function showStatus(message) {
-    const status = document.getElementById('statusMessage');
-    status.textContent = message;
-    status.style.display = 'block';
-    setTimeout(() => {
-      status.style.display = 'none';
-    }, 2000);
-  }
-
-  function markAsViewed(id) {
-    const titleEl = document.getElementById(`title-${id}`);
-    if (titleEl) {
-      titleEl.style.color = '#bbb';
     }
-  }
-</script>
 
-  <!-- Chèn đoạn dưới vào cuối phần body -->
-<div id="statusMessage" style="
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(76, 175, 80, 0.95);
-  color: white;
-  padding: 10px 20px;
-  border-radius: 8px;
-  display: none;
-  z-index: 9999;
-  font-weight: bold;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-"></div>
+    function restoreCollapsedState() {
+      ['truyen', 'video'].forEach(type => {
+        const list = document.getElementById(type + 'List');
+        const btn = document.getElementById('toggle-' + type);
+        const isCollapsed = localStorage.getItem(`collapsed-${type}`) === 'true';
+        if (isCollapsed) {
+          list.style.display = 'none';
+          btn.textContent = '+';
+        } else {
+          list.style.display = '';
+          btn.textContent = '−';
+        }
+      });
+    }
+
+    function setupImageSelectionText() {
+      const imgInput = document.getElementById('linkImage');
+      const text = document.getElementById('imageSelectedText');
+      imgInput.addEventListener('change', () => {
+        if (imgInput.files.length > 0) {
+          text.textContent = 'Đã chọn ảnh thành công!';
+        } else {
+          text.textContent = '';
+        }
+      });
+    }
+
+    function showStatus(message) {
+      const status = document.getElementById('statusMessage');
+      status.textContent = message;
+      status.style.display = 'block';
+      setTimeout(() => {
+        status.style.display = 'none';
+      }, 2000);
+    }
+
+    function markAsViewed(id) {
+      const titleEl = document.getElementById(`title-${id}`);
+      if (titleEl) {
+        titleEl.style.color = '#bbb';
+      }
+    }
+  </script>
 </body>
 </html>
