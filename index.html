@@ -137,6 +137,10 @@
       margin-left: 10px;
     }
 
+    .link-actions .edit-btn {
+      background-color: #ff9800;
+    }
+
     .empty-state {
       text-align: center;
       padding: 30px;
@@ -200,10 +204,9 @@
           <option value="video">Video</option>
         </select>
         <input type="file" id="linkImage" accept="image/*" style="display:none">
-        <!-- Thêm sau input ảnh và trước nút chọn ảnh -->
-<span id="imageSelectedText" style="color: #4CAF50; font-size: 0.9em; margin-top: 5px;"></span>
+        <span id="imageSelectedText" style="color: #4CAF50; font-size: 0.9em; margin-top: 5px;"></span>
         <button type="button" onclick="document.getElementById('linkImage').click()">Chọn ảnh</button>
-        <button onclick="addLink()">Thêm Link</button>
+        <button id="addOrUpdateBtn" onclick="addLink()">Thêm Link</button>
       </div>
     </div>
 
@@ -235,6 +238,7 @@
   const storeName = 'links';
   const itemsPerPage = 15;
   let db, currentPage = 1, totalPages = 1;
+  let editingId = null;
 
   window.onload = async () => {
     await initDB();
@@ -276,6 +280,19 @@
     });
   }
 
+  function updateDB(id, newData) {
+    return new Promise(resolve => {
+      const tx = db.transaction(storeName, 'readwrite');
+      const store = tx.objectStore(storeName);
+      const request = store.get(id);
+      request.onsuccess = () => {
+        const record = request.result;
+        const updated = { ...record, ...newData };
+        store.put(updated).onsuccess = resolve;
+      };
+    });
+  }
+
   function getAllLinks() {
     return new Promise(resolve => {
       const tx = db.transaction(storeName, 'readonly');
@@ -300,22 +317,64 @@
     const imgInput = document.getElementById('linkImage');
     let image = '';
 
-    if (imgInput.files.length > 0) {
+    if (editingId) {
+      // Cập nhật
       const reader = new FileReader();
-      reader.onload = async () => {
-        image = reader.result;
+      if (imgInput.files.length > 0) {
+        reader.onload = async () => {
+          image = reader.result;
+          await updateDB(editingId, { title, url, type, image });
+          resetEditState();
+          showStatus("Đã cập nhật link!");
+          renderLinks();
+        };
+        reader.readAsDataURL(imgInput.files[0]);
+      } else {
+        await updateDB(editingId, { title, url, type });
+        resetEditState();
+        showStatus("Đã cập nhật link!");
+        renderLinks();
+      }
+    } else {
+      // Thêm mới
+      if (imgInput.files.length > 0) {
+        const reader = new FileReader();
+        reader.onload = async () => {
+          image = reader.result;
+          await addToDB({ title, url, type, image });
+          clearInputs();
+          showStatus(`${type === 'truyen' ? 'Truyện' : 'Video'} đã được lưu!`);
+          renderLinks();
+        };
+        reader.readAsDataURL(imgInput.files[0]);
+      } else {
         await addToDB({ title, url, type, image });
         clearInputs();
         showStatus(`${type === 'truyen' ? 'Truyện' : 'Video'} đã được lưu!`);
         renderLinks();
-      };
-      reader.readAsDataURL(imgInput.files[0]);
-    } else {
-      await addToDB({ title, url, type, image });
-      clearInputs();
-      showStatus(`${type === 'truyen' ? 'Truyện' : 'Video'} đã được lưu!`);
-      renderLinks();
+      }
     }
+  }
+
+  function editLink(id) {
+    const tx = db.transaction(storeName, 'readonly');
+    const store = tx.objectStore(storeName);
+    store.get(id).onsuccess = e => {
+      const data = e.target.result;
+      document.getElementById('linkTitle').value = data.title;
+      document.getElementById('linkUrl').value = data.url;
+      document.getElementById('linkType').value = data.type;
+      document.getElementById('imageSelectedText').textContent = data.image ? "Đang giữ ảnh cũ" : "";
+      editingId = id;
+      document.getElementById('addOrUpdateBtn').textContent = "Cập nhật";
+      showStatus("Đang sửa link...");
+    };
+  }
+
+  function resetEditState() {
+    editingId = null;
+    clearInputs();
+    document.getElementById('addOrUpdateBtn').textContent = "Thêm Link";
   }
 
   function clearInputs() {
@@ -352,6 +411,7 @@
           <button class="view-btn" onclick="markAsViewed(${item.id}); window.open('${item.url}', '_blank')">Xem</button>
         </div>
         <div class="link-actions">
+          <button class="edit-btn" onclick="editLink(${item.id})">Sửa</button>
           <button onclick="deleteLink(${item.id})">Xóa</button>
         </div>
       </div>
@@ -438,22 +498,21 @@
       titleEl.style.color = '#bbb';
     }
   }
-</script>
+  </script>
 
-  <!-- Chèn đoạn dưới vào cuối phần body -->
-<div id="statusMessage" style="
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(76, 175, 80, 0.95);
-  color: white;
-  padding: 10px 20px;
-  border-radius: 8px;
-  display: none;
-  z-index: 9999;
-  font-weight: bold;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-"></div>
+  <div id="statusMessage" style="
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(76, 175, 80, 0.95);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    display: none;
+    z-index: 9999;
+    font-weight: bold;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  "></div>
 </body>
 </html>
