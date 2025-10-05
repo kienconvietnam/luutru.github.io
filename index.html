@@ -85,6 +85,22 @@
       padding: 20px;
     }
 
+    .search-bar {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .search-bar input {
+      width: 80%;
+      max-width: 500px;
+      padding: 10px 15px;
+      border-radius: 8px;
+      border: none;
+      background-color: #333;
+      color: var(--text-color);
+      font-size: 1em;
+    }
+
     .link-item {
       background-color: rgba(255, 255, 255, 0.05);
       padding: 15px;
@@ -186,6 +202,10 @@
         display: flex;
         justify-content: flex-end;
       }
+
+      .search-bar input {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -210,6 +230,11 @@
       </div>
     </div>
 
+    <!-- 🔍 Ô tìm kiếm -->
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Tìm kiếm theo tiêu đề..." oninput="renderLinks()">
+    </div>
+
     <div class="links-container">
       <div>
         <h2 onclick="toggleSection('truyen')">
@@ -232,6 +257,21 @@
       <input type="number" id="jumpToPage" placeholder="Tới trang" min="1" onchange="jumpToPage()">
     </div>
   </div>
+
+  <div id="statusMessage" style="
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(76, 175, 80, 0.95);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    display: none;
+    z-index: 9999;
+    font-weight: bold;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  "></div>
 
   <script>
   const dbName = 'LinksDB';
@@ -318,7 +358,6 @@
     let image = '';
 
     if (editingId) {
-      // Cập nhật
       const reader = new FileReader();
       if (imgInput.files.length > 0) {
         reader.onload = async () => {
@@ -336,7 +375,6 @@
         renderLinks();
       }
     } else {
-      // Thêm mới
       if (imgInput.files.length > 0) {
         const reader = new FileReader();
         reader.onload = async () => {
@@ -386,10 +424,15 @@
 
   async function renderLinks() {
     const allLinks = await getAllLinks();
-    const truyenLinks = allLinks.filter(l => l.type === 'truyen');
-    const videoLinks = allLinks.filter(l => l.type === 'video');
 
-    totalPages = Math.ceil(allLinks.length / itemsPerPage);
+    // 🔍 Lọc theo từ khóa
+    const searchValue = document.getElementById('searchInput').value.trim().toLowerCase();
+    const filteredLinks = allLinks.filter(l => l.title.toLowerCase().includes(searchValue));
+
+    const truyenLinks = filteredLinks.filter(l => l.type === 'truyen');
+    const videoLinks = filteredLinks.filter(l => l.type === 'video');
+
+    totalPages = Math.ceil(filteredLinks.length / itemsPerPage);
     currentPage = Math.min(currentPage, totalPages || 1);
     const start = (currentPage - 1) * itemsPerPage;
 
@@ -499,20 +542,5 @@
     }
   }
   </script>
-
-  <div id="statusMessage" style="
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: rgba(76, 175, 80, 0.95);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 8px;
-    display: none;
-    z-index: 9999;
-    font-weight: bold;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-  "></div>
 </body>
 </html>
