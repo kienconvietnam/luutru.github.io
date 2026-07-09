@@ -72,7 +72,7 @@ button:hover {
   opacity: 0.9;
 }
 
-/* Khối bao bọc ô nhập tag mới */
+/* Khối bao bọc ô nhập tag */
 .tag-input-container {
   position: relative;
   flex-grow: 1;
@@ -83,7 +83,7 @@ button:hover {
   width: 100%;
 }
 
-/* Hộp gợi ý tag xổ xuống ngay dưới ô nhập */
+/* Hộp gợi ý tag xổ xuống */
 .tag-suggestion-box {
   position: absolute;
   top: 105%;
@@ -106,7 +106,6 @@ button:hover {
   display: none;
 }
 
-/* Các nút tag nhỏ bên trong hộp gợi ý */
 .suggest-tag-btn {
   background-color: #333;
   color: #ccc;
@@ -214,12 +213,19 @@ button:hover {
   border-color: var(--accent-color);
 }
 
+/* 🏷️ KHU VỰC THAY ĐỔI: Xếp tag gọn gàng không đè lên ảnh */
+.item-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
 .item-tags-wrapper {
   position: relative;
   display: inline-flex;
   align-items: center;
-  max-width: 100%;
-  margin-top: 6px;
   gap: 5px;
 }
 
@@ -267,43 +273,60 @@ button:hover {
   margin-bottom: 15px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start; /* Giữ căn lề đỉnh cố định */
 }
 
 .link-item:hover {
   transform: translateX(5px);
 }
 
+/* 🌟 Ép các phần tử bên trong xếp hàng dọc đồng bộ */
 .link-info {
   flex-grow: 1;
-  max-width: calc(100% - 120px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 100%;
 }
 
 .link-title {
   font-weight: bold;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
   display: block;
   color: var(--accent-color);
   word-wrap: break-word;
 }
 
-.view-btn {
+/* 🌟 Giữ hình ảnh truyện cố định không bị bóp nghẹt hay thu nhỏ */
+.entry-thumbnail {
   margin-top: 8px;
-  padding: 5px 10px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  max-width: 160px; /* Định mức chiều rộng hợp lý trên điện thoại */
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.view-btn {
+  margin-top: 4px;
+  padding: 6px 14px;
   font-size: 0.85em;
   background-color: #2196F3;
   color: white;
   border: none;
-  border-radius: 3px;
+  border-radius: 4px;
   cursor: pointer;
 }
 
 .link-type {
   display: inline-block;
-  padding: 3px 8px;
+  padding: 2px 6px;
   border-radius: 3px;
-  font-size: 0.8em;
+  font-size: 0.75em;
   background-color: rgba(76, 175, 80, 0.2);
+  color: #85e389;
 }
 
 .link-actions button {
@@ -353,10 +376,6 @@ button:hover {
   .link-item {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  .link-info {
-    max-width: 100%;
   }
 
   .link-actions {

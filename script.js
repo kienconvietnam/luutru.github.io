@@ -11,7 +11,7 @@ window.onload = async () => {
   restoreCollapsedState();
   renderLinks();
   setupImageSelectionText();
-  setupClickOutside(); // Lắng nghe sự kiện để đóng hộp tag gợi ý
+  setupClickOutside(); // Lắng nghe sự kiện ẩn hộp gợi ý tag khi bấm ra ngoài
 };
 
 function initDB() {
@@ -76,6 +76,7 @@ function deleteLink(id) {
   };
 }
 
+// Hàm phân tách chuỗi nhập từ ô input thành mảng các tag độc lập
 function parseTags(tagString) {
   if (!tagString) return [];
   return tagString.split(',')
@@ -136,13 +137,14 @@ function editLink(id) {
     document.getElementById('linkTitle').value = data.title;
     document.getElementById('linkUrl').value = data.url;
     document.getElementById('linkType').value = data.type;
+    // Hiển thị lại các tag cũ ngăn cách nhau bằng dấu phẩy để chỉnh sửa tiếp
     document.getElementById('linkTags').value = data.tags ? data.tags.join(', ') : '';
     document.getElementById('imageSelectedText').textContent = data.image ? "Đang giữ ảnh cũ" : "";
     editingId = id;
     document.getElementById('addOrUpdateBtn').textContent = "Cập nhật";
     showStatus("Đang sửa link...");
     
-    // Đưa màn hình cuộn mượt lên trên cùng chỗ nhập liệu để dễ chỉnh sửa trên điện thoại
+    // Tự động cuộn màn hình mượt lên khu vực điền thông tin để dễ thao tác trên điện thoại
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 }
@@ -177,6 +179,7 @@ function toggleTagCloud() {
   tagContainer.classList.toggle('hidden');
 }
 
+// Bật tắt hiển thị toàn bộ tag khi danh sách tag quá dài dưới card truyện
 function toggleExpandTags(elementId) {
   const el = document.getElementById(elementId);
   if (el) {
@@ -184,7 +187,7 @@ function toggleExpandTags(elementId) {
   }
 }
 
-// 🌟 Hiển thị hộp thoại chứa các nút bấm tag gợi ý thông minh
+// Mở hộp thoại chứa các nút bấm chọn nhanh tag
 function showTagSuggestions() {
   const box = document.getElementById('tagSuggestionBox');
   if (box.children.length > 0) {
@@ -192,7 +195,7 @@ function showTagSuggestions() {
   }
 }
 
-// 🌟 Hàm xử lý khi bấm một nút tag gợi ý: Nối thêm tag vào chuỗi hiện tại, ngăn ghi đè
+// Thêm tag được bấm từ gợi ý vào ô input (Nối chuỗi, không lo đè mất tag cũ)
 function selectSuggestTag(tag) {
   const input = document.getElementById('linkTags');
   let currentTags = parseTags(input.value);
@@ -201,12 +204,11 @@ function selectSuggestTag(tag) {
     currentTags.push(tag);
   }
   
-  // Ghi lại chuỗi mới nối tiếp nhau bằng dấu phẩy
   input.value = currentTags.join(', ');
   input.focus();
 }
 
-// Tự động đóng hộp gợi ý khi click hoặc chạm ra ngoài vùng ô nhập tag
+// Tự động đóng hộp gợi ý tag khi bấm ra khu vực bên ngoài ô nhập
 function setupClickOutside() {
   document.addEventListener('click', (e) => {
     const container = document.querySelector('.tag-input-container');
@@ -231,7 +233,7 @@ function renderTagCloud(allLinks) {
 
   const uniqueTags = Object.keys(tagCounts).sort();
   
-  // 1. Tạo các nút bấm gợi ý nhấp chuột đổ vào hộp SuggestionBox
+  // Tạo danh sách các nút bấm tag gợi ý thông minh đổ vào hộp chọn nhanh
   if (uniqueTags.length > 0) {
     suggestionBox.innerHTML = uniqueTags.map(tag => 
       `<button type="button" class="suggest-tag-btn" onclick="selectSuggestTag('${tag}')">+ ${tag}</button>`
@@ -245,7 +247,7 @@ function renderTagCloud(allLinks) {
     return;
   }
 
-  // 2. Tạo các nút tag lọc nội dung
+  // Tạo các nút tag dùng để lọc danh sách
   tagContainer.innerHTML = `
     <button class="tag-btn ${selectedTag === null ? 'active' : ''}" onclick="filterByTag(null)">
       Tất cả (${allLinks.length})
@@ -289,7 +291,7 @@ async function renderLinks() {
     
     if (item.tags && item.tags.length > 0) {
       tagsHTML = `
-        <div class="item-tags-wrapper" onclick="toggleExpandTags('tags-${item.id}')">
+        <div class="item-tags-wrapper" onclick="toggleExpandTags('tags-${item.id}'); event.stopPropagation();">
           <div class="item-tags" id="tags-${item.id}">
             ${item.tags.map(t => `<span class="item-tag">#${t}</span>`).join('')}
           </div>
@@ -302,10 +304,14 @@ async function renderLinks() {
       <div class="link-item">
         <div class="link-info">
           <span class="link-title" id="title-${item.id}">${item.title || '(Không tiêu đề)'}</span>
-          <span class="link-type">${item.type}</span>
-          ${tagsHTML}
-          ${item.image ? `<img src="${item.image}" alt="thumb" width="100" style="margin-top:10px;border-radius:6px;">` : ''}
-          <br>
+          
+          <div class="item-meta-row">
+            <span class="link-type">${item.type}</span>
+            ${tagsHTML}
+          </div>
+          
+          ${item.image ? `<img src="${item.image}" alt="thumb" class="entry-thumbnail">` : ''}
+          
           <button class="view-btn" onclick="markAsViewed(${item.id}); window.open('${item.url}', '_blank')">Xem</button>
         </div>
         <div class="link-actions">
