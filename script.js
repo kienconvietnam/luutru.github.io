@@ -11,6 +11,7 @@ window.onload = async () => {
   restoreCollapsedState();
   renderLinks();
   setupImageSelectionText();
+  setupClickOutside(); // Lắng nghe sự kiện để đóng hộp tag gợi ý
 };
 
 function initDB() {
@@ -140,6 +141,9 @@ function editLink(id) {
     editingId = id;
     document.getElementById('addOrUpdateBtn').textContent = "Cập nhật";
     showStatus("Đang sửa link...");
+    
+    // Đưa màn hình cuộn mượt lên trên cùng chỗ nhập liệu để dễ chỉnh sửa trên điện thoại
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 }
 
@@ -155,6 +159,7 @@ function clearInputs() {
   document.getElementById('linkTags').value = '';
   document.getElementById('linkImage').value = '';
   document.getElementById('imageSelectedText').textContent = '';
+  document.getElementById('tagSuggestionBox').classList.add('hidden');
 }
 
 function filterByTag(tag) {
@@ -167,16 +172,53 @@ function filterByTag(tag) {
   renderLinks();
 }
 
-// Bật/Tắt hiển thị danh sách thẻ khi bấm nút ☰ Thẻ
 function toggleTagCloud() {
   const tagContainer = document.getElementById('tagContainer');
   tagContainer.classList.toggle('hidden');
 }
 
-// Tạo danh sách các nút chọn Tag nhanh & Cập nhật danh sách gợi ý tự động (Datalist)
+function toggleExpandTags(elementId) {
+  const el = document.getElementById(elementId);
+  if (el) {
+    el.classList.toggle('expanded');
+  }
+}
+
+// 🌟 Hiển thị hộp thoại chứa các nút bấm tag gợi ý thông minh
+function showTagSuggestions() {
+  const box = document.getElementById('tagSuggestionBox');
+  if (box.children.length > 0) {
+    box.classList.remove('hidden');
+  }
+}
+
+// 🌟 Hàm xử lý khi bấm một nút tag gợi ý: Nối thêm tag vào chuỗi hiện tại, ngăn ghi đè
+function selectSuggestTag(tag) {
+  const input = document.getElementById('linkTags');
+  let currentTags = parseTags(input.value);
+  
+  if (!currentTags.includes(tag)) {
+    currentTags.push(tag);
+  }
+  
+  // Ghi lại chuỗi mới nối tiếp nhau bằng dấu phẩy
+  input.value = currentTags.join(', ');
+  input.focus();
+}
+
+// Tự động đóng hộp gợi ý khi click hoặc chạm ra ngoài vùng ô nhập tag
+function setupClickOutside() {
+  document.addEventListener('click', (e) => {
+    const container = document.querySelector('.tag-input-container');
+    if (container && !container.contains(e.target)) {
+      document.getElementById('tagSuggestionBox').classList.add('hidden');
+    }
+  });
+}
+
 function renderTagCloud(allLinks) {
   const tagContainer = document.getElementById('tagContainer');
-  const datalist = document.getElementById('availableTags');
+  const suggestionBox = document.getElementById('tagSuggestionBox');
   const tagCounts = {};
   
   allLinks.forEach(item => {
@@ -189,15 +231,21 @@ function renderTagCloud(allLinks) {
 
   const uniqueTags = Object.keys(tagCounts).sort();
   
-  // 1. Cập nhật danh sách gợi ý tự động cho ô nhập dữ liệu (Datalist)
-  datalist.innerHTML = uniqueTags.map(tag => `<option value="${tag}"></option>`).join('');
+  // 1. Tạo các nút bấm gợi ý nhấp chuột đổ vào hộp SuggestionBox
+  if (uniqueTags.length > 0) {
+    suggestionBox.innerHTML = uniqueTags.map(tag => 
+      `<button type="button" class="suggest-tag-btn" onclick="selectSuggestTag('${tag}')">+ ${tag}</button>`
+    ).join('');
+  } else {
+    suggestionBox.innerHTML = '<span style="font-size:0.8em;color:#666;padding:5px;">Chưa có tag nào sẵn có</span>';
+  }
 
   if (uniqueTags.length === 0) {
     tagContainer.innerHTML = '';
     return;
   }
 
-  // 2. Cập nhật các nút tag bấm nhanh ở bộ lọc công cụ
+  // 2. Tạo các nút tag lọc nội dung
   tagContainer.innerHTML = `
     <button class="tag-btn ${selectedTag === null ? 'active' : ''}" onclick="filterByTag(null)">
       Tất cả (${allLinks.length})
@@ -237,9 +285,18 @@ async function renderLinks() {
   videoList.innerHTML = '';
 
   const createHTML = (items) => items.map(item => {
-    const tagsHTML = item.tags && item.tags.length > 0 
-      ? `<div class="item-tags">${item.tags.map(t => `<span class="item-tag">#${t}</span>`).join('')}</div>`
-      : '';
+    let tagsHTML = '';
+    
+    if (item.tags && item.tags.length > 0) {
+      tagsHTML = `
+        <div class="item-tags-wrapper" onclick="toggleExpandTags('tags-${item.id}')">
+          <div class="item-tags" id="tags-${item.id}">
+            ${item.tags.map(t => `<span class="item-tag">#${t}</span>`).join('')}
+          </div>
+          ${item.tags.length > 2 ? `<button class="tag-indicator-btn" title="Xem thêm tag">!</button>` : ''}
+        </div>
+      `;
+    }
 
     return `
       <div class="link-item">

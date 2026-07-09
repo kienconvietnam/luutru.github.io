@@ -17,8 +17,10 @@
         <input type="text" id="linkTitle" placeholder="Nhập tiêu đề">
         <input type="url" id="linkUrl" placeholder="Nhập link URL">
         
-        <input type="text" id="linkTags" placeholder="Chọn hoặc nhập tag..." list="availableTags">
-        <datalist id="availableTags"></datalist>
+        <div class="tag-input-container">
+          <input type="text" id="linkTags" placeholder="Nhập hoặc bấm chọn tag gợi ý..." onfocus="showTagSuggestions()">
+          <div id="tagSuggestionBox" class="tag-suggestion-box hidden"></div>
+        </div>
 
         <select id="linkType">
           <option value="truyen">Truyện</option>

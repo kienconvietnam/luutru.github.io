@@ -72,22 +72,74 @@ button:hover {
   opacity: 0.9;
 }
 
+/* Khối bao bọc ô nhập tag mới */
+.tag-input-container {
+  position: relative;
+  flex-grow: 1;
+  min-width: 200px;
+}
+
+.tag-input-container input {
+  width: 100%;
+}
+
+/* Hộp gợi ý tag xổ xuống ngay dưới ô nhập */
+.tag-suggestion-box {
+  position: absolute;
+  top: 105%;
+  left: 0;
+  right: 0;
+  background-color: #252525;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 10px;
+  max-height: 150px;
+  overflow-y: auto;
+  z-index: 100;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+.tag-suggestion-box.hidden {
+  display: none;
+}
+
+/* Các nút tag nhỏ bên trong hộp gợi ý */
+.suggest-tag-btn {
+  background-color: #333;
+  color: #ccc;
+  border: 1px solid #555;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  cursor: pointer;
+}
+
+.suggest-tag-btn:hover {
+  background-color: var(--accent-color);
+  color: white;
+  border-color: var(--accent-color);
+}
+
 .links-container {
   background-color: var(--secondary-color);
   border-radius: 8px;
   padding: 20px;
 }
 
-/* Thanh công cụ Tìm kiếm & Lọc Tag mới */
+/* Thanh công cụ Tìm kiếm & Lọc gọn gàng */
 .search-filter-wrapper {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: stretch;
   gap: 10px;
   margin-bottom: 15px;
   max-width: 550px;
   margin-left: auto;
   margin-right: auto;
+  width: 100%;
 }
 
 .search-box-container {
@@ -106,6 +158,7 @@ button:hover {
 
 .search-box-container input {
   width: 100%;
+  height: 100%;
   padding: 10px 15px 10px 38px;
   border-radius: 8px;
   border: none;
@@ -114,24 +167,23 @@ button:hover {
   font-size: 1em;
 }
 
-/* Nút bộ lọc ba gạch */
 .filter-toggle-btn {
   background-color: #333;
   color: var(--text-color);
   border: 1px solid #444;
   border-radius: 8px;
-  padding: 10px 15px;
-  font-size: 1em;
+  padding: 0 15px;
+  font-size: 0.95em;
   display: flex;
   align-items: center;
   gap: 5px;
+  white-space: nowrap;
 }
 
 .filter-toggle-btn:hover {
   background-color: #444;
 }
 
-/* Giao diện khối chứa Tag */
 .tag-cloud {
   display: flex;
   flex-wrap: wrap;
@@ -141,7 +193,6 @@ button:hover {
   background-color: rgba(255, 255, 255, 0.02);
   border-radius: 8px;
   justify-content: center;
-  transition: all 0.3s ease;
 }
 
 .tag-cloud.hidden {
@@ -163,12 +214,26 @@ button:hover {
   border-color: var(--accent-color);
 }
 
-/* Tag nhỏ hiển thị trong từng mục */
+.item-tags-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  margin-top: 6px;
+  gap: 5px;
+}
+
 .item-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-  margin-top: 6px;
+  max-height: 24px;
+  overflow: hidden;
+  transition: max-height 0.2s ease;
+}
+
+.item-tags.expanded {
+  max-height: 200px;
 }
 
 .item-tag {
@@ -177,6 +242,22 @@ button:hover {
   font-size: 0.75em;
   padding: 2px 6px;
   border-radius: 3px;
+  white-space: nowrap;
+}
+
+.tag-indicator-btn {
+  background-color: #ff9800;
+  color: #1a1a1a;
+  border: none;
+  font-size: 0.7em;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: bold;
 }
 
 .link-item {
@@ -187,7 +268,6 @@ button:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  transition: transform 0.2s;
 }
 
 .link-item:hover {
@@ -196,6 +276,7 @@ button:hover {
 
 .link-info {
   flex-grow: 1;
+  max-width: calc(100% - 120px);
 }
 
 .link-title {
@@ -203,6 +284,7 @@ button:hover {
   margin-bottom: 5px;
   display: block;
   color: var(--accent-color);
+  word-wrap: break-word;
 }
 
 .view-btn {
@@ -221,7 +303,6 @@ button:hover {
   padding: 3px 8px;
   border-radius: 3px;
   font-size: 0.8em;
-  margin-left: 10px;
   background-color: rgba(76, 175, 80, 0.2);
 }
 
@@ -274,14 +355,14 @@ button:hover {
     align-items: flex-start;
   }
 
+  .link-info {
+    max-width: 100%;
+  }
+
   .link-actions {
-    margin-top: 10px;
+    margin-top: 15px;
     width: 100%;
     display: flex;
     justify-content: flex-end;
-  }
-
-  .search-filter-wrapper {
-    width: 100%;
   }
 }
