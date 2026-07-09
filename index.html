@@ -16,6 +16,10 @@
       <div class="input-row">
         <input type="text" id="linkTitle" placeholder="Nhập tiêu đề">
         <input type="url" id="linkUrl" placeholder="Nhập link URL">
+        
+        <input type="text" id="linkTags" placeholder="Chọn hoặc nhập tag..." list="availableTags">
+        <datalist id="availableTags"></datalist>
+
         <select id="linkType">
           <option value="truyen">Truyện</option>
           <option value="video">Video</option>
@@ -27,9 +31,15 @@
       </div>
     </div>
 
-    <div class="search-bar">
-      <input type="text" id="searchInput" placeholder="Tìm kiếm theo tiêu đề..." oninput="renderLinks()">
+    <div class="search-filter-wrapper">
+      <div class="search-box-container">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Tìm kiếm tiêu đề..." oninput="renderLinks()">
+      </div>
+      <button class="filter-toggle-btn" onclick="toggleTagCloud()" title="Bộ lọc thẻ">☰ Thẻ</button>
     </div>
+
+    <div id="tagContainer" class="tag-cloud hidden"></div>
 
     <div class="links-container">
       <div>

@@ -78,20 +78,105 @@ button:hover {
   padding: 20px;
 }
 
-.search-bar {
-  margin-bottom: 20px;
-  text-align: center;
+/* Thanh công cụ Tìm kiếm & Lọc Tag mới */
+.search-filter-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  max-width: 550px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.search-bar input {
-  width: 80%;
-  max-width: 500px;
-  padding: 10px 15px;
+.search-box-container {
+  position: relative;
+  flex-grow: 1;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+  pointer-events: none;
+}
+
+.search-box-container input {
+  width: 100%;
+  padding: 10px 15px 10px 38px;
   border-radius: 8px;
   border: none;
   background-color: #333;
   color: var(--text-color);
   font-size: 1em;
+}
+
+/* Nút bộ lọc ba gạch */
+.filter-toggle-btn {
+  background-color: #333;
+  color: var(--text-color);
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 10px 15px;
+  font-size: 1em;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.filter-toggle-btn:hover {
+  background-color: #444;
+}
+
+/* Giao diện khối chứa Tag */
+.tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 10px;
+  background-color: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.tag-cloud.hidden {
+  display: none;
+}
+
+.tag-btn {
+  background-color: #333;
+  color: #bbb;
+  padding: 5px 12px;
+  border-radius: 15px;
+  font-size: 0.85em;
+  border: 1px solid #444;
+}
+
+.tag-btn.active {
+  background-color: var(--accent-color);
+  color: white;
+  border-color: var(--accent-color);
+}
+
+/* Tag nhỏ hiển thị trong từng mục */
+.item-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.item-tag {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #aaa;
+  font-size: 0.75em;
+  padding: 2px 6px;
+  border-radius: 3px;
 }
 
 .link-item {
@@ -121,7 +206,7 @@ button:hover {
 }
 
 .view-btn {
-  margin-top: 5px;
+  margin-top: 8px;
   padding: 5px 10px;
   font-size: 0.85em;
   background-color: #2196F3;
@@ -196,7 +281,7 @@ button:hover {
     justify-content: flex-end;
   }
 
-  .search-bar input {
+  .search-filter-wrapper {
     width: 100%;
   }
 }

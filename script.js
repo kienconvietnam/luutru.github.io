@@ -3,6 +3,7 @@ const storeName = 'links';
 const itemsPerPage = 15;
 let db, currentPage = 1, totalPages = 1;
 let editingId = null;
+let selectedTag = null; 
 
 window.onload = async () => {
   await initDB();
@@ -74,10 +75,18 @@ function deleteLink(id) {
   };
 }
 
+function parseTags(tagString) {
+  if (!tagString) return [];
+  return tagString.split(',')
+    .map(t => t.trim().toLowerCase())
+    .filter(t => t !== '');
+}
+
 async function addLink() {
   const title = document.getElementById('linkTitle').value.trim();
   const url = document.getElementById('linkUrl').value.trim();
   const type = document.getElementById('linkType').value;
+  const tags = parseTags(document.getElementById('linkTags').value);
   const imgInput = document.getElementById('linkImage');
   let image = '';
 
@@ -86,14 +95,14 @@ async function addLink() {
     if (imgInput.files.length > 0) {
       reader.onload = async () => {
         image = reader.result;
-        await updateDB(editingId, { title, url, type, image });
+        await updateDB(editingId, { title, url, type, tags, image });
         resetEditState();
         showStatus("Đã cập nhật link!");
         renderLinks();
       };
       reader.readAsDataURL(imgInput.files[0]);
     } else {
-      await updateDB(editingId, { title, url, type });
+      await updateDB(editingId, { title, url, type, tags });
       resetEditState();
       showStatus("Đã cập nhật link!");
       renderLinks();
@@ -103,14 +112,14 @@ async function addLink() {
       const reader = new FileReader();
       reader.onload = async () => {
         image = reader.result;
-        await addToDB({ title, url, type, image });
+        await addToDB({ title, url, type, tags, image });
         clearInputs();
         showStatus(`${type === 'truyen' ? 'Truyện' : 'Video'} đã được lưu!`);
         renderLinks();
       };
       reader.readAsDataURL(imgInput.files[0]);
     } else {
-      await addToDB({ title, url, type, image });
+      await addToDB({ title, url, type, tags, image });
       clearInputs();
       showStatus(`${type === 'truyen' ? 'Truyện' : 'Video'} đã được lưu!`);
       renderLinks();
@@ -126,6 +135,7 @@ function editLink(id) {
     document.getElementById('linkTitle').value = data.title;
     document.getElementById('linkUrl').value = data.url;
     document.getElementById('linkType').value = data.type;
+    document.getElementById('linkTags').value = data.tags ? data.tags.join(', ') : '';
     document.getElementById('imageSelectedText').textContent = data.image ? "Đang giữ ảnh cũ" : "";
     editingId = id;
     document.getElementById('addOrUpdateBtn').textContent = "Cập nhật";
@@ -142,16 +152,74 @@ function resetEditState() {
 function clearInputs() {
   document.getElementById('linkTitle').value = '';
   document.getElementById('linkUrl').value = '';
+  document.getElementById('linkTags').value = '';
   document.getElementById('linkImage').value = '';
   document.getElementById('imageSelectedText').textContent = '';
+}
+
+function filterByTag(tag) {
+  if (selectedTag === tag) {
+    selectedTag = null; 
+  } else {
+    selectedTag = tag;
+  }
+  currentPage = 1;
+  renderLinks();
+}
+
+// Bật/Tắt hiển thị danh sách thẻ khi bấm nút ☰ Thẻ
+function toggleTagCloud() {
+  const tagContainer = document.getElementById('tagContainer');
+  tagContainer.classList.toggle('hidden');
+}
+
+// Tạo danh sách các nút chọn Tag nhanh & Cập nhật danh sách gợi ý tự động (Datalist)
+function renderTagCloud(allLinks) {
+  const tagContainer = document.getElementById('tagContainer');
+  const datalist = document.getElementById('availableTags');
+  const tagCounts = {};
+  
+  allLinks.forEach(item => {
+    if (item.tags && Array.isArray(item.tags)) {
+      item.tags.forEach(tag => {
+        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+      });
+    }
+  });
+
+  const uniqueTags = Object.keys(tagCounts).sort();
+  
+  // 1. Cập nhật danh sách gợi ý tự động cho ô nhập dữ liệu (Datalist)
+  datalist.innerHTML = uniqueTags.map(tag => `<option value="${tag}"></option>`).join('');
+
+  if (uniqueTags.length === 0) {
+    tagContainer.innerHTML = '';
+    return;
+  }
+
+  // 2. Cập nhật các nút tag bấm nhanh ở bộ lọc công cụ
+  tagContainer.innerHTML = `
+    <button class="tag-btn ${selectedTag === null ? 'active' : ''}" onclick="filterByTag(null)">
+      Tất cả (${allLinks.length})
+    </button>
+  ` + uniqueTags.map(tag => `
+    <button class="tag-btn ${selectedTag === tag ? 'active' : ''}" onclick="filterByTag('${tag}')">
+      #${tag} (${tagCounts[tag]})
+    </button>
+  `).join('');
 }
 
 async function renderLinks() {
   const allLinks = await getAllLinks();
 
-  // 🔍 Lọc theo từ khóa
+  renderTagCloud(allLinks);
+
   const searchValue = document.getElementById('searchInput').value.trim().toLowerCase();
-  const filteredLinks = allLinks.filter(l => l.title.toLowerCase().includes(searchValue));
+  let filteredLinks = allLinks.filter(l => l.title.toLowerCase().includes(searchValue));
+
+  if (selectedTag) {
+    filteredLinks = filteredLinks.filter(l => l.tags && l.tags.includes(selectedTag));
+  }
 
   const truyenLinks = filteredLinks.filter(l => l.type === 'truyen');
   const videoLinks = filteredLinks.filter(l => l.type === 'video');
@@ -168,24 +236,31 @@ async function renderLinks() {
   truyenList.innerHTML = '';
   videoList.innerHTML = '';
 
-  const createHTML = (items) => items.map(item => `
-    <div class="link-item">
-      <div class="link-info">
-        <span class="link-title" id="title-${item.id}">${item.title || '(Không tiêu đề)'}</span>
-        <span class="link-type">${item.type}</span>
-        ${item.image ? `<img src="${item.image}" alt="thumb" width="100" style="margin-top:10px;border-radius:6px;">` : ''}
-        <br>
-        <button class="view-btn" onclick="markAsViewed(${item.id}); window.open('${item.url}', '_blank')">Xem</button>
-      </div>
-      <div class="link-actions">
-        <button class="edit-btn" onclick="editLink(${item.id})">Sửa</button>
-        <button onclick="deleteLink(${item.id})">Xóa</button>
-      </div>
-    </div>
-  `).join('');
+  const createHTML = (items) => items.map(item => {
+    const tagsHTML = item.tags && item.tags.length > 0 
+      ? `<div class="item-tags">${item.tags.map(t => `<span class="item-tag">#${t}</span>`).join('')}</div>`
+      : '';
 
-  truyenList.innerHTML = pageTruyen.length ? createHTML(pageTruyen) : `<div class="empty-state">Không có truyện.</div>`;
-  videoList.innerHTML = pageVideo.length ? createHTML(pageVideo) : `<div class="empty-state">Không có video.</div>`;
+    return `
+      <div class="link-item">
+        <div class="link-info">
+          <span class="link-title" id="title-${item.id}">${item.title || '(Không tiêu đề)'}</span>
+          <span class="link-type">${item.type}</span>
+          ${tagsHTML}
+          ${item.image ? `<img src="${item.image}" alt="thumb" width="100" style="margin-top:10px;border-radius:6px;">` : ''}
+          <br>
+          <button class="view-btn" onclick="markAsViewed(${item.id}); window.open('${item.url}', '_blank')">Xem</button>
+        </div>
+        <div class="link-actions">
+          <button class="edit-btn" onclick="editLink(${item.id})">Sửa</button>
+          <button onclick="deleteLink(${item.id})">Xóa</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  truyenList.innerHTML = pageTruyen.length ? createHTML(pageTruyen) : `<div class="empty-state">Không có truyện phù hợp.</div>`;
+  videoList.innerHTML = pageVideo.length ? createHTML(pageVideo) : `<div class="empty-state">Không có video phù hợp.</div>`;
 
   document.getElementById('currentPageDisplay').innerText = currentPage;
   document.getElementById('totalPagesDisplay').innerText = totalPages || 1;
