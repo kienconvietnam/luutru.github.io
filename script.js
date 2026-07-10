@@ -12,6 +12,17 @@ window.onload = async () => {
   renderLinks();
   setupImageSelectionText();
   setupClickOutside(); // Lắng nghe sự kiện ẩn hộp gợi ý tag khi bấm ra ngoài
+
+  // 🌟 ĐOẠN CODE ĐÃ SỬA: Ấn Enter ở BẤT KỲ ĐÂU cũng CHỈ hạ bàn phím, không tự lưu
+  const allInputsOnPage = document.querySelectorAll('input');
+  allInputsOnPage.forEach(input => {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault(); // Ngăn hành vi mặc định (tránh tự submit form nếu có)
+        input.blur();       // Chỉ hạ bàn phím xuống
+      }
+    });
+  });
 };
 
 function initDB() {
@@ -162,6 +173,19 @@ function clearInputs() {
   document.getElementById('linkImage').value = '';
   document.getElementById('imageSelectedText').textContent = '';
   document.getElementById('tagSuggestionBox').classList.add('hidden');
+  
+  // Xóa chữ trong thanh tìm kiếm khi thêm/cập nhật xong
+  const searchInput = document.getElementById('searchInput');
+  if (searchInput) {
+    searchInput.value = '';
+  }
+
+  // 🌟 ĐOẠN CODE MỚI: Xóa số trong ô nhảy trang và đưa biến currentPage về trang 1
+  const jumpPageInput = document.getElementById('jumpToPage');
+  if (jumpPageInput) {
+    jumpPageInput.value = ''; // Xóa trắng ô nhập số trang
+  }
+  currentPage = 1; // Đặt lại biến trang hiện tại về trang 1
 }
 
 function filterByTag(tag) {
@@ -316,7 +340,7 @@ async function renderLinks() {
         </div>
         <div class="link-actions">
           <button class="edit-btn" onclick="editLink(${item.id})">Sửa</button>
-          <button onclick="deleteLink(${item.id})">Xóa</button>
+          <button class="delete-btn-custom" onclick="deleteLink(${item.id})">Xóa</button>
         </div>
       </div>
     `;
@@ -380,7 +404,7 @@ function setupImageSelectionText() {
   const imgInput = document.getElementById('linkImage');
   const text = document.getElementById('imageSelectedText');
   imgInput.addEventListener('change', () => {
-    if (imgInput.files.length > 0) {
+    if (imgInput.files.length > 0) {  
       text.textContent = 'Đã chọn ảnh thành công!';
     } else {
       text.textContent = '';
