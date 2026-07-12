@@ -7,32 +7,51 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- Nút 3 gạch mở Sidebar ở góc trên cùng bên trái -->
+  <button class="menu-toggle-btn" onclick="toggleSidebar()" title="Mở menu thêm mới">+</button>
+
+  <!-- THANH SIDEBAR CHỨA KHU VỰC NHẬP LIỆU -->
+  <div id="sidebarForm" class="sidebar hidden-sidebar">
+    <div class="sidebar-header">
+      <h2>Nhập Thông Tin</h2>
+      <button class="close-sidebar-btn" onclick="toggleSidebar()">✕</button>
+    </div>
+    <div class="input-group">
+      <div class="input-row">
+        <label>Tiêu đề:</label>
+        <input type="text" id="linkTitle" placeholder="Nhập tiêu đề">
+        
+        <label>Đường dẫn URL:</label>
+        <input type="url" id="linkUrl" placeholder="Nhập link URL">
+        
+        <label>Thẻ (Tags):</label>
+        <div class="tag-input-container">
+          <input type="text" id="linkTags" placeholder="Nhập hoặc chọn tag..." onfocus="showTagSuggestions()">
+          <div id="tagSuggestionBox" class="tag-suggestion-box hidden"></div>
+        </div>
+
+        <label>Phân loại:</label>
+        <select id="linkType">
+          <option value="truyen">Truyện</option>
+          <option value="video">Video</option>
+        </select>
+        
+        <input type="file" id="linkImage" accept="image/*" style="display:none">
+        <span id="imageSelectedText" style="color: #4CAF50; font-size: 0.9em; margin-top: 5px; display: block; text-align: center;"></span>
+        <button type="button" class="upload-btn" onclick="document.getElementById('linkImage').click()">Chọn ảnh bìa</button>
+        
+        <button id="addOrUpdateBtn" onclick="addLink()">Thêm Link</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- KHU VỰC CHÍNH HIỂN THỊ DANH SÁCH -->
   <div class="container">
     <header>
       <h1>Quản lý Truyện & Video</h1>
     </header>
 
-    <div class="input-group">
-      <div class="input-row">
-        <input type="text" id="linkTitle" placeholder="Nhập tiêu đề">
-        <input type="url" id="linkUrl" placeholder="Nhập link URL">
-        
-        <div class="tag-input-container">
-          <input type="text" id="linkTags" placeholder="Nhập hoặc bấm chọn tag gợi ý..." onfocus="showTagSuggestions()">
-          <div id="tagSuggestionBox" class="tag-suggestion-box hidden"></div>
-        </div>
-
-        <select id="linkType">
-          <option value="truyen">Truyện</option>
-          <option value="video">Video</option>
-        </select>
-        <input type="file" id="linkImage" accept="image/*" style="display:none">
-        <span id="imageSelectedText" style="color: #4CAF50; font-size: 0.9em; margin-top: 5px;"></span>
-        <button type="button" onclick="document.getElementById('linkImage').click()">Chọn ảnh</button>
-        <button id="addOrUpdateBtn" onclick="addLink()">Thêm Link</button>
-      </div>
-    </div>
-
+    <!-- Chỉ giữ lại thanh tìm kiếm và nút Thẻ lọc -->
     <div class="search-filter-wrapper">
       <div class="search-box-container">
         <span class="search-icon">🔍</span>

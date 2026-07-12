@@ -99,19 +99,22 @@ function parseTags(tagString) {
     .filter(t => t !== '');
 }
 
-/* 🌟 TÍNH NĂNG MỚI: Kiểm tra URL trùng lặp trong IndexedDB */
+/* 🌟 Kiểm tra URL trùng lặp trong IndexedDB */
 async function isUrlDuplicate(url, currentEditingId = null) {
   const allLinks = await getAllLinks();
   return allLinks.some(link => {
-    // Chuẩn hóa url (bỏ dấu gạch chéo cuối nếu có) để so sánh chính xác hơn
     const formatUrl = (u) => u.replace(/\/$/, "").toLowerCase();
-    
-    // Nếu đang sửa, bỏ qua không so sánh với chính nó
     if (currentEditingId && link.id === currentEditingId) {
       return false;
     }
     return formatUrl(link.url) === formatUrl(url);
   });
+}
+
+/* 🌟 Tính năng mới: Ẩn/Hiện Sidebar nhập liệu */
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebarForm');
+  sidebar.classList.toggle('hidden-sidebar');
 }
 
 async function addLink() {
@@ -122,17 +125,15 @@ async function addLink() {
   const imgInput = document.getElementById('linkImage');
   let image = '';
 
-  // Ràng buộc dữ liệu cơ bản
   if (!title || !url) {
     showStatus("Vui lòng nhập đầy đủ Tiêu đề và URL!");
     return;
   }
 
-  /* 🌟 KIỂM TRA TRÙNG LẶP URL TRƯỚC KHI LƯU */
   const isDuplicate = await isUrlDuplicate(url, editingId);
   if (isDuplicate) {
     showStatus("Lỗi: URL này đã tồn tại trong danh sách!");
-    return; // Dừng hàm, không cho lưu
+    return;
   }
 
   if (editingId) {
@@ -143,6 +144,7 @@ async function addLink() {
         await updateDB(editingId, { title, url, type, tags, image });
         resetEditState();
         showStatus("Đã cập nhật link!");
+        toggleSidebar(); // 🌟 Tự đóng sidebar sau khi xong
         renderLinks();
       };
       reader.readAsDataURL(imgInput.files[0]);
@@ -150,6 +152,7 @@ async function addLink() {
       await updateDB(editingId, { title, url, type, tags });
       resetEditState();
       showStatus("Đã cập nhật link!");
+      toggleSidebar(); // 🌟 Tự đóng sidebar sau khi xong
       renderLinks();
     }
   } else {
@@ -160,6 +163,7 @@ async function addLink() {
         await addToDB({ title, url, type, tags, image });
         clearInputs();
         showStatus(`${type === 'truyen' ? 'Truyện' : 'Video'} đã được lưu!`);
+        toggleSidebar(); // 🌟 Tự đóng sidebar sau khi xong
         renderLinks();
       };
       reader.readAsDataURL(imgInput.files[0]);
@@ -167,6 +171,7 @@ async function addLink() {
       await addToDB({ title, url, type, tags, image });
       clearInputs();
       showStatus(`${type === 'truyen' ? 'Truyện' : 'Video'} đã được lưu!`);
+      toggleSidebar(); // 🌟 Tự đóng sidebar sau khi xong
       renderLinks();
     }
   }
@@ -184,8 +189,12 @@ function editLink(id) {
     document.getElementById('imageSelectedText').textContent = data.image ? "Đang giữ ảnh cũ" : "";
     editingId = id;
     document.getElementById('addOrUpdateBtn').textContent = "Cập nhật";
+    
+    // 🌟 Mở sidebar ra khi bấm nút Sửa để người dùng nhập dữ liệu luôn
+    const sidebar = document.getElementById('sidebarForm');
+    sidebar.classList.remove('hidden-sidebar');
+    
     showStatus("Đang sửa link...");
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 }
 
@@ -249,11 +258,9 @@ function showTagSuggestions() {
 function selectSuggestTag(tag) {
   const input = document.getElementById('linkTags');
   let currentTags = parseTags(input.value);
-  
   if (!currentTags.includes(tag)) {
     currentTags.push(tag);
   }
-  
   input.value = currentTags.join(', ');
   input.focus();
 }
@@ -308,7 +315,6 @@ function renderTagCloud(allLinks) {
 
 async function renderLinks() {
   const allLinks = await getAllLinks();
-
   renderTagCloud(allLinks);
 
   const searchValue = document.getElementById('searchInput').value.trim().toLowerCase();
@@ -381,7 +387,6 @@ async function renderLinks() {
   videoList.innerHTML = pageVideo.length ? createHTML(pageVideo) : `<div class="empty-state">Không có video phù hợp.</div>`;
 
   const maxTotalPages = Math.max(totalTruyenPages, totalVideoPages);
-  
   let displayPage = currentTruyenPage;
   if (totalVideoPages > totalTruyenPages) {
     displayPage = currentVideoPage;
@@ -406,7 +411,6 @@ function changePage(action) {
 
   currentTruyenPage = Math.min(newPage, totalTruyenPages);
   currentVideoPage = Math.min(newPage, totalVideoPages);
-
   renderLinks();
 }
 
@@ -419,7 +423,6 @@ function jumpToPage() {
     currentTruyenPage = Math.min(value, totalTruyenPages);
     currentVideoPage = Math.min(value, totalVideoPages);
     renderLinks();
-    
     input.blur(); 
     input.value = ''; 
   } else if (!isNaN(value)) {
@@ -476,11 +479,10 @@ function showStatus(message) {
   const status = document.getElementById('statusMessage');
   status.textContent = message;
   
-  // Tự động chuyển màu nền đỏ nếu là thông báo lỗi trùng lặp
   if(message.includes("Lỗi") || message.includes("Vui lòng")) {
-    status.style.backgroundColor = "rgba(244, 67, 54, 0.95)"; // Màu đỏ báo lỗi
+    status.style.backgroundColor = "rgba(244, 67, 54, 0.95)";
   } else {
-    status.style.backgroundColor = "rgba(76, 175, 80, 0.95)";  // Màu xanh thành công ban đầu
+    status.style.backgroundColor = "rgba(76, 175, 80, 0.95)";
   }
 
   status.style.display = 'block';
