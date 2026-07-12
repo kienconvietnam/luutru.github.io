@@ -99,6 +99,21 @@ function parseTags(tagString) {
     .filter(t => t !== '');
 }
 
+/* 🌟 TÍNH NĂNG MỚI: Kiểm tra URL trùng lặp trong IndexedDB */
+async function isUrlDuplicate(url, currentEditingId = null) {
+  const allLinks = await getAllLinks();
+  return allLinks.some(link => {
+    // Chuẩn hóa url (bỏ dấu gạch chéo cuối nếu có) để so sánh chính xác hơn
+    const formatUrl = (u) => u.replace(/\/$/, "").toLowerCase();
+    
+    // Nếu đang sửa, bỏ qua không so sánh với chính nó
+    if (currentEditingId && link.id === currentEditingId) {
+      return false;
+    }
+    return formatUrl(link.url) === formatUrl(url);
+  });
+}
+
 async function addLink() {
   const title = document.getElementById('linkTitle').value.trim();
   const url = document.getElementById('linkUrl').value.trim();
@@ -106,6 +121,19 @@ async function addLink() {
   const tags = parseTags(document.getElementById('linkTags').value);
   const imgInput = document.getElementById('linkImage');
   let image = '';
+
+  // Ràng buộc dữ liệu cơ bản
+  if (!title || !url) {
+    showStatus("Vui lòng nhập đầy đủ Tiêu đề và URL!");
+    return;
+  }
+
+  /* 🌟 KIỂM TRA TRÙNG LẶP URL TRƯỚC KHI LƯU */
+  const isDuplicate = await isUrlDuplicate(url, editingId);
+  if (isDuplicate) {
+    showStatus("Lỗi: URL này đã tồn tại trong danh sách!");
+    return; // Dừng hàm, không cho lưu
+  }
 
   if (editingId) {
     const reader = new FileReader();
@@ -293,11 +321,9 @@ async function renderLinks() {
   const truyenLinks = filteredLinks.filter(l => l.type === 'truyen');
   const videoLinks = filteredLinks.filter(l => l.type === 'video');
 
-  // Tính toán tổng số trang chuẩn xác cho từng danh mục riêng biệt
   totalTruyenPages = Math.ceil(truyenLinks.length / itemsPerPage) || 1;
   totalVideoPages = Math.ceil(videoLinks.length / itemsPerPage) || 1;
 
-  // Giữ số trang hiện tại không vượt quá tổng số trang thật
   currentTruyenPage = Math.min(currentTruyenPage, totalTruyenPages);
   currentVideoPage = Math.min(currentVideoPage, totalVideoPages);
 
@@ -354,11 +380,8 @@ async function renderLinks() {
   truyenList.innerHTML = pageTruyen.length ? createHTML(pageTruyen) : `<div class="empty-state">Không có truyện phù hợp.</div>`;
   videoList.innerHTML = pageVideo.length ? createHTML(pageVideo) : `<div class="empty-state">Không có video phù hợp.</div>`;
 
-  // 🌟 SỬA TẠI ĐÂY: Hiển thị thông tin phân trang dựa trên danh mục có nhiều trang nhất một cách tường minh
-  // Tuy nhiên, số trang hiện tại hiển thị sẽ dựa trên trạng thái thực tế của danh mục đó, không gán chung chung làm sinh ra trang trống.
   const maxTotalPages = Math.max(totalTruyenPages, totalVideoPages);
   
-  // Nếu danh mục truyện đang hiển thị nhiều trang hơn hoặc bằng thì lấy mốc truyen, ngược lại lấy mốc video
   let displayPage = currentTruyenPage;
   if (totalVideoPages > totalTruyenPages) {
     displayPage = currentVideoPage;
@@ -368,33 +391,6 @@ async function renderLinks() {
   document.getElementById('totalPagesDisplay').innerText = maxTotalPages;
 }
 
-// 🌟 SỬA TẠI ĐÂY: Chuyển trang thông minh, kiểm tra giới hạn độc lập cho từng cột dữ liệu
-function changePage(action) {
-  let targetTruyenPage = currentTruyenPage;
-  let targetVideoPage = currentVideoPage;
-
-  if (action === 'prev') {
-    targetTruyenPage = currentTruyenPage - 1;
-    targetVideoPage = currentVideoPage - 1;
-  } else if (action === 'next') {
-    targetTruyenPage = currentTruyenPage + 1;
-    targetVideoPage = currentVideoPage + 1;
-  }
-
-  // Kiểm tra và ràng buộc điều kiện trang cho Truyện độc lập
-  if (targetTruyenPage >= 1 && targetTruyenPage <= totalTruyenPages) {
-    currentTruyenPage = targetTruyenPage;
-  }
-  
-  // Kiểm tra và ràng buộc điều kiện trang cho Video độc lập
-  if (targetVideoPage >= 1 && targetVideoPage <= totalVideoPages) {
-    currentVideoPage = targetVideoPage;
-  }
-
-  renderLinks();
-}
-
-// 🌟 ĐÃ CẬP NHẬT: Xử lý tăng/giảm trang chính xác theo chu kỳ độc lập
 function changePage(action) {
   const maxTotalPages = Math.max(totalTruyenPages, totalVideoPages);
   const displayPage = Math.max(currentTruyenPage, currentVideoPage);
@@ -408,14 +404,12 @@ function changePage(action) {
 
   if (newPage < 1 || newPage > maxTotalPages) return;
 
-  // Cập nhật số trang cho từng danh mục dựa trên giới hạn riêng của nó
   currentTruyenPage = Math.min(newPage, totalTruyenPages);
   currentVideoPage = Math.min(newPage, totalVideoPages);
 
   renderLinks();
 }
 
-// 🌟 ĐÃ CẬP NHẬT: Nhảy trang chính xác và xóa giá trị ô nhập sau khi hoàn tất
 function jumpToPage() {
   const input = document.getElementById('jumpToPage');
   const value = parseInt(input.value);
@@ -426,7 +420,6 @@ function jumpToPage() {
     currentVideoPage = Math.min(value, totalVideoPages);
     renderLinks();
     
-    // Đưa tiêu điểm ra ngoài và xóa trống ô nhập cho đẹp
     input.blur(); 
     input.value = ''; 
   } else if (!isNaN(value)) {
@@ -482,6 +475,14 @@ function setupImageSelectionText() {
 function showStatus(message) {
   const status = document.getElementById('statusMessage');
   status.textContent = message;
+  
+  // Tự động chuyển màu nền đỏ nếu là thông báo lỗi trùng lặp
+  if(message.includes("Lỗi") || message.includes("Vui lòng")) {
+    status.style.backgroundColor = "rgba(244, 67, 54, 0.95)"; // Màu đỏ báo lỗi
+  } else {
+    status.style.backgroundColor = "rgba(76, 175, 80, 0.95)";  // Màu xanh thành công ban đầu
+  }
+
   status.style.display = 'block';
   setTimeout(() => {
     status.style.display = 'none';
