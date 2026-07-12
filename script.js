@@ -310,41 +310,51 @@ async function renderLinks() {
   truyenList.innerHTML = '';
   videoList.innerHTML = '';
 
-  const createHTML = (items) => items.map(item => {
-    let tagsHTML = '';
+  const createHTML = (items) => {
+    // 🌟 SỬA ĐỔI: Thêm thẻ bọc ngoài cùng dạng Grid cho danh sách card truyện/video
+    let wrapperHTML = '<div class="links-list-wrapper">';
     
-    if (item.tags && item.tags.length > 0) {
-      tagsHTML = `
-        <div class="item-tags-wrapper" onclick="toggleExpandTags('tags-${item.id}'); event.stopPropagation();">
-          <div class="item-tags" id="tags-${item.id}">
-            ${item.tags.map(t => `<span class="item-tag">#${t}</span>`).join('')}
+    wrapperHTML += items.map(item => {
+      let tagsHTML = '';
+      
+      if (item.tags && item.tags.length > 0) {
+        tagsHTML = `
+          <div class="item-tags-wrapper" onclick="toggleExpandTags('tags-${item.id}'); event.stopPropagation();">
+            <div class="item-tags" id="tags-${item.id}">
+              ${item.tags.map(t => `<span class="item-tag">#${t}</span>`).join('')}
+            </div>
+            ${item.tags.length > 2 ? `<button class="tag-indicator-btn" title="Xem thêm tag">!</button>` : ''}
           </div>
-          ${item.tags.length > 2 ? `<button class="tag-indicator-btn" title="Xem thêm tag">!</button>` : ''}
+        `;
+      }
+
+      // 🌟 SỬA ĐỔI THỨ TỰ: Đưa ảnh bìa (thumbnail) lên vị trí đầu tiên của link-info, tiêu đề đứng ngay dưới ảnh bìa
+      const defaultImg = item.image ? item.image : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100%" height="100%" fill="%23eaeef3"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="12" fill="%237f8c8d">No Cover</text></svg>';
+
+      return `
+        <div class="link-item">
+          <div class="link-info">
+            <img src="${defaultImg}" alt="thumb" class="entry-thumbnail">
+            <span class="link-type">${item.type === 'truyen' ? 'Truyện' : 'Video'}</span>
+            <span class="link-title" id="title-${item.id}">${item.title || '(Không tiêu đề)'}</span>
+            
+            <div class="item-meta-row">
+              ${tagsHTML}
+            </div>
+            
+            <button class="view-btn" onclick="markAsViewed(${item.id}); window.open('${item.url}', '_blank')">Xem</button>
+          </div>
+          <div class="link-actions">
+            <button class="edit-btn" onclick="editLink(${item.id})">Sửa</button>
+            <button class="delete-btn-custom" onclick="deleteLink(${item.id})">Xóa</button>
+          </div>
         </div>
       `;
-    }
+    }).join('');
 
-    return `
-      <div class="link-item">
-        <div class="link-info">
-          <span class="link-title" id="title-${item.id}">${item.title || '(Không tiêu đề)'}</span>
-          
-          <div class="item-meta-row">
-            <span class="link-type">${item.type}</span>
-            ${tagsHTML}
-          </div>
-          
-          ${item.image ? `<img src="${item.image}" alt="thumb" class="entry-thumbnail">` : ''}
-          
-          <button class="view-btn" onclick="markAsViewed(${item.id}); window.open('${item.url}', '_blank')">Xem</button>
-        </div>
-        <div class="link-actions">
-          <button class="edit-btn" onclick="editLink(${item.id})">Sửa</button>
-          <button class="delete-btn-custom" onclick="deleteLink(${item.id})">Xóa</button>
-        </div>
-      </div>
-    `;
-  }).join('');
+    wrapperHTML += '</div>';
+    return wrapperHTML;
+  };
 
   truyenList.innerHTML = pageTruyen.length ? createHTML(pageTruyen) : `<div class="empty-state">Không có truyện phù hợp.</div>`;
   videoList.innerHTML = pageVideo.length ? createHTML(pageVideo) : `<div class="empty-state">Không có video phù hợp.</div>`;

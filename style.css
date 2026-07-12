@@ -115,7 +115,7 @@ button:hover {
   width: 100%;
 }
 
-/* Hộp gợi ý tag đổ xuống mang phong cách bóng bẩy */
+/* 🌟 HỘP GỢI Ý TAG: Đã thu nhỏ chiều cao để không che khuất phần phân loại bên dưới */
 .tag-suggestion-box {
   position: absolute;
   top: 105%;
@@ -124,14 +124,14 @@ button:hover {
   background-color: var(--secondary-color);
   border: 1px solid rgba(0, 210, 255, 0.3);
   border-radius: 8px;
-  padding: 12px;
-  max-height: 150px;
+  padding: 8px;
+  max-height: 95px;
   overflow-y: auto;
   z-index: 100;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
 }
 
 .tag-suggestion-box.hidden {
@@ -174,12 +174,13 @@ button:hover {
   align-items: center;
 }
 
-/* Tìm kiếm và Bộ lọc thẻ */
+/* 🌟 THANH TÌM KIẾM VÀ BỘ LỌC: Đã sửa khoảng cách margin-top để không dính sát khung trên */
 .search-filter-wrapper {
   display: flex;
   justify-content: center;
   align-items: stretch;
   gap: 12px;
+  margin-top: 15px;
   margin-bottom: 20px;
   max-width: 550px;
   margin-left: auto;
@@ -264,13 +265,108 @@ button:hover {
   box-shadow: var(--shadow-glow);
 }
 
+/* 🌟 LỚP BỌC LƯỚI: Kích hoạt hiển thị dạng ô cờ nhiều cột */
+.links-list-wrapper {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+  padding-top: 10px;
+}
+
+/* 🌟 THIẾT KẾ CARD TRUYỆN: Chuyển hoàn toàn sang khối đứng ô cờ */
+.link-item {
+  background-color: var(--secondary-color);
+  border: 1px solid #eef2f5;
+  border-radius: var(--border-radius);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+.link-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 18px rgba(0, 210, 255, 0.15);
+  border-color: rgba(0, 210, 255, 0.4);
+}
+
+.link-info {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-grow: 1;
+}
+
+/* 🌟 TIÊU ĐỀ: Nằm dưới ảnh bìa, giới hạn tối đa 2 dòng cho đều nhau */
+.link-title {
+  font-weight: 700;
+  font-size: 0.95em;
+  line-height: 1.3;
+  color: #1a2a3a;
+  margin-bottom: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  height: 2.6em;
+}
+
+/* 🌟 ẢNH BÌA TRUYỆN DẠNG ĐỨNG CHUẨN ĐỀU NHAU */
+.entry-thumbnail {
+  width: 100%;
+  height: 210px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-top: 0;
+  margin-bottom: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  border: 2px solid #ffffff;
+  background-color: #eaeef3;
+}
+
+/* 🌟 NÚT XEM TRUYỆN DƯỚI ĐÁY CARD */
+.view-btn {
+  width: 100%;
+  padding: 6px 0;
+  font-size: 0.8em;
+  margin-top: auto;
+  background: linear-gradient(135deg, #2196F3 0%, #0b7dda 100%);
+  box-shadow: 0 4px 10px rgba(33, 150, 243, 0.2);
+}
+
+.view-btn:hover {
+  box-shadow: 0 0 10px rgba(33, 150, 243, 0.5);
+}
+
+/* Badge Phân Loại */
+.link-type {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7em;
+  font-weight: bold;
+  text-transform: uppercase;
+  background-color: #e3fcef;
+  color: #00a854;
+  border: 1px solid #c6f6d5;
+  margin-bottom: 6px;
+}
+
 /* Các hàng thông tin đính kèm trong Card */
 .item-meta-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  width: 100%;
 }
 
 .item-tags-wrapper {
@@ -297,8 +393,8 @@ button:hover {
 .item-tag {
   background-color: rgba(0, 210, 255, 0.1);
   color: #0088cc;
-  font-size: 0.78em;
-  padding: 3px 8px;
+  font-size: 0.75em;
+  padding: 2px 6px;
   border-radius: 4px;
   font-weight: 600;
   border: 1px solid rgba(0, 210, 255, 0.2);
@@ -317,91 +413,18 @@ button:hover {
   font-weight: bold;
 }
 
-/* Card Truyện / Video riêng biệt */
-.link-item {
-  background-color: var(--secondary-color);
-  padding: 20px;
-  border-radius: var(--border-radius);
-  margin-bottom: 18px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  border: 1px solid #eef2f5;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-  transition: all 0.3s ease;
-}
-
-.link-item:hover {
-  transform: translateX(4px) translateY(-2px);
-  box-shadow: 0 6px 18px rgba(0, 210, 255, 0.12);
-  border-color: rgba(0, 210, 255, 0.3);
-}
-
-.link-info {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  max-width: 100%;
-}
-
-.link-title {
-  font-weight: 700;
-  font-size: 1.15em;
-  margin-bottom: 8px;
-  display: block;
-  color: #1a2a3a;
-}
-
-/* Ảnh minh họa truyện chất lượng cao sắc nét */
-.entry-thumbnail {
-  margin-top: 10px;
-  margin-bottom: 12px;
-  border-radius: 8px;
-  max-width: 170px;
-  width: 100%;
-  height: auto;
-  object-fit: contain;
-  display: block;
-  border: 2px solid #ffffff;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-/* Nút Xem */
-.view-btn {
-  margin-top: 4px;
-  padding: 6px 18px;
-  font-size: 0.85em;
-  background: linear-gradient(135deg, #2196F3 0%, #0b7dda 100%);
-  box-shadow: 0 4px 10px rgba(33, 150, 243, 0.2);
-}
-
-.view-btn:hover {
-  box-shadow: 0 0 10px rgba(33, 150, 243, 0.5);
-}
-
-/* Badge Phân Loại */
-.link-type {
-  display: inline-block;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 0.75em;
-  font-weight: bold;
-  text-transform: uppercase;
-  background-color: #e3fcef;
-  color: #00a854;
-  border: 1px solid #c6f6d5;
-}
-
-/* Các nút hành động Sửa / Xóa */
+/* 🌟 CÁC NÚT SỬA / XÓA THU GỌN TINH TẾ ĐƯỢC XẾP ĐỀU NHAU Ở ĐÁY THẺ */
 .link-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
+  width: 100%;
+  margin-top: 6px;
 }
 
 .link-actions button {
-  padding: 6px 12px;
-  font-size: 0.85em;
+  flex: 1;
+  padding: 5px 0;
+  font-size: 0.78em;
   box-shadow: none;
 }
 
@@ -462,21 +485,19 @@ button:hover {
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+/* 🌟 RESPONSIVE: Đảm bảo hiển thị đúng 2 cột cực đẹp trên điện thoại di động */
 @media (max-width: 768px) {
   .input-row {
     flex-direction: column;
   }
+}
 
-  .link-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
+@media (max-width: 480px) {
+  .links-list-wrapper {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
-
-  .link-actions {
-    width: 100%;
-    justify-content: flex-end;
-    border-top: 1px solid #edf2f7;
-    padding-top: 12px;
+  .entry-thumbnail {
+    height: 180px;
   }
 }
