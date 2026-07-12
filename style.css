@@ -25,11 +25,10 @@ body {
   background-image: linear-gradient(135deg, #f4f6f9 0%, #e9ecef 100%);
 }
 
-/* 🌟 NÚT 3 GẠCH MỞ SIDEBAR GÓC TRÊN CÙNG BÊN TRÁI */
-/* 🌟 NÚT 3 GẠCH DI CHUYỂN THEO TRANG KHI CUỘN */
+/* NÚT 3 GẠCH DI CHUYỂN THEO TRANG KHI CUỘN */
 .menu-toggle-btn {
-  position: absolute;       /* Thay thành absolute để gán chặt vào luồng cuộn của trang */
-  top: 25px;                /* Cân bằng lại khoảng cách cho đẹp với tiêu đề */
+  position: absolute;       
+  top: 25px;                
   left: 25px;
   z-index: 1000;
   padding: 10px 16px;
@@ -37,9 +36,11 @@ body {
   background: linear-gradient(135deg, #1f4068 0%, #162447 100%);
   box-shadow: 0 4px 15px rgba(0,0,0,0.15);
   border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
 }
 
-/* Đồng thời tinh chỉnh lại khoảng đệm trên mobile cho cân đối */
 @media (max-width: 480px) {
   .menu-toggle-btn {
     top: 15px;
@@ -47,7 +48,7 @@ body {
   }
 }
 
-/* 🌟 THANH SIDEBAR ẨN/HIỆN */
+/* THANH SIDEBAR ẨN/HIỆN */
 .sidebar {
   position: fixed;
   top: 0;
@@ -60,13 +61,17 @@ body {
   padding: 20px;
   display: flex;
   flex-direction: column;
-  transition: transform 0.3s ease-in-out;
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Mượt hơn */
   overflow-y: auto;
+  
+  /* TỐI ƯU CHO MOBILE Ở ĐÂY */
+  will-change: transform;
+  transform: translate3d(0, 0, 0); 
+  -webkit-overflow-scrolling: touch; /* Giúp cuộn sidebar trên iOS mượt */
 }
 
-/* Class điều khiển đóng sidebar */
 .hidden-sidebar {
-  transform: translateX(-100%);
+  transform: translate3d(-100%, 0, 0); /* Thay cho translateX */
 }
 
 .sidebar-header {
@@ -89,14 +94,13 @@ body {
   font-size: 1.3em;
   padding: 5px;
   box-shadow: none;
+  border: none;
+  cursor: pointer;
 }
 .close-sidebar-btn:hover {
   color: #ff4444;
-  transform: none;
-  box-shadow: none;
 }
 
-/* Form sắp xếp theo chiều dọc trong Sidebar */
 .input-group {
   background: none;
   border: none;
@@ -161,7 +165,6 @@ button:hover {
 }
 .upload-btn:hover {
   background: #e2e8f0;
-  box-shadow: none;
   color: #000;
 }
 
@@ -170,7 +173,6 @@ button:hover {
   margin-top: 10px;
 }
 
-/* Ô chứa tag input */
 .tag-input-container {
   position: relative;
   width: 100%;
@@ -212,10 +214,8 @@ button:hover {
   background: var(--accent-color);
   color: white;
   border-color: var(--accent-color);
-  transform: none;
 }
 
-/* Container chính dời xuống để nhường chỗ cho nút menu */
 .container {
   max-width: 1000px;
   margin: 0 auto;
@@ -398,7 +398,6 @@ header h1 {
   height: 210px;
   object-fit: cover;
   border-radius: 8px;
-  margin-top: 0;
   margin-bottom: 8px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   border: 2px solid #ffffff;
@@ -412,9 +411,6 @@ header h1 {
   margin-top: auto;
   background: linear-gradient(135deg, #2196F3 0%, #0b7dda 100%);
   box-shadow: 0 4px 10px rgba(33, 150, 243, 0.2);
-}
-.view-btn:hover {
-  box-shadow: 0 0 10px rgba(33, 150, 243, 0.5);
 }
 
 .link-type {
@@ -480,6 +476,7 @@ header h1 {
   align-items: center;
   justify-content: center;
   font-weight: bold;
+  border: none;
 }
 
 .link-actions {
@@ -497,14 +494,8 @@ header h1 {
 .link-actions .edit-btn {
   background: #ff9800;
 }
-.link-actions .edit-btn:hover {
-  box-shadow: 0 0 10px rgba(255, 152, 0, 0.4);
-}
 .link-actions .delete-btn-custom {
   background: #ff4444;
-}
-.link-actions .delete-btn-custom:hover {
-  box-shadow: 0 0 10px rgba(255, 68, 68, 0.4);
 }
 
 .empty-state {
@@ -512,20 +503,6 @@ header h1 {
   padding: 40px;
   color: var(--text-muted);
   font-style: italic;
-}
-
-.pagination {
-  margin-top: 25px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.pagination input {
-  width: 60px;
-  text-align: center;
-  padding: 6px;
 }
 
 .toggle-btn {
@@ -537,28 +514,20 @@ header h1 {
   margin-left: 10px;
   box-shadow: none;
 }
-.toggle-btn:hover {
-  box-shadow: none;
-  transform: none;
-}
 
 #statusMessage {
   box-shadow: 0 4px 15px rgba(0, 210, 255, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* TỐI ƯU GIAO DIỆN DI ĐỘNG */
-/* TỐI ƯU GIAO DIỆN DI ĐỘNG */
 @media (max-width: 480px) {
-  /* Thu nhỏ nút Thêm trên Mobile */
   .menu-toggle-btn {
     top: 15px;
     left: 10px;
-    padding: 6px 10px;       /* Giảm khoảng đệm cho nút nhỏ lại */
-    font-size: 0.85em;        /* Thu nhỏ chữ */
-    border-radius: 6px;       /* Bo góc nhỏ lại cho hợp kích thước */
+    padding: 6px 10px;       
+    font-size: 0.85em;        
+    border-radius: 6px;       
   }
-
   .container {
     padding: 60px 10px 10px 10px !important; 
   }
@@ -568,17 +537,65 @@ header h1 {
   .links-container {
     padding: 12px !important;
     width: 100% !important;
-    overflow: hidden;
   }
   .links-list-wrapper {
     grid-template-columns: repeat(2, 1fr) !important; 
     gap: 8px !important; 
     width: 100% !important;
   }
-  .link-item {
-    width: 100% !important;
-  }
   .entry-thumbnail {
     height: 150px;
   }
+}
+
+.selected-badge-tag {
+  background: linear-gradient(135deg, var(--accent-color) 0%, #00a8cc 100%);
+  color: white;
+  font-size: 0.75em;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+  box-shadow: var(--shadow-glow);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  animation: fadeIn 0.2s ease;
+}
+
+.selected-badge-tag b {
+  cursor: pointer;
+  color: #ff4444;
+  background: white;
+  /* Đã tăng kích thước để dễ bấm trên mobile */
+  width: 20px;          
+  height: 20px;         
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 0.85em;    
+  font-weight: bold;    
+  transition: all 0.2s;
+}
+
+/* Nút ✕ màu đỏ để tắt nhanh tag */
+.selected-badge-tag b {
+  cursor: pointer;
+  color: #ff4444;
+  background: white;
+  /* TĂNG KÍCH THƯỚC Ở ĐÂY */
+  width: 20px;          /* Tăng từ 14px lên 20px */
+  height: 20px;         /* Tăng từ 14px lên 20px */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 0.85em;    /* Tăng font chữ lên một chút để cân đối */
+  font-weight: bold;    /* Làm đậm nét chữ ✕ */
+  transition: all 0.2s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
 }

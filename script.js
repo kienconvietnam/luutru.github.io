@@ -1,13 +1,7 @@
 const dbName = 'LinksDB';
 const storeName = 'links';
-const itemsPerPage = 10; 
 
 let db;
-let currentTruyenPage = 1;
-let currentVideoPage = 1;
-let totalTruyenPages = 1;
-let totalVideoPages = 1;
-
 let editingId = null;
 let selectedTag = null; 
 
@@ -99,7 +93,6 @@ function parseTags(tagString) {
     .filter(t => t !== '');
 }
 
-/* 🌟 Kiểm tra URL trùng lặp trong IndexedDB */
 async function isUrlDuplicate(url, currentEditingId = null) {
   const allLinks = await getAllLinks();
   return allLinks.some(link => {
@@ -111,7 +104,6 @@ async function isUrlDuplicate(url, currentEditingId = null) {
   });
 }
 
-/* 🌟 Tính năng mới: Ẩn/Hiện Sidebar nhập liệu */
 function toggleSidebar() {
   const sidebar = document.getElementById('sidebarForm');
   sidebar.classList.toggle('hidden-sidebar');
@@ -144,7 +136,7 @@ async function addLink() {
         await updateDB(editingId, { title, url, type, tags, image });
         resetEditState();
         showStatus("Đã cập nhật link!");
-        toggleSidebar(); // 🌟 Tự đóng sidebar sau khi xong
+        toggleSidebar();
         renderLinks();
       };
       reader.readAsDataURL(imgInput.files[0]);
@@ -152,7 +144,7 @@ async function addLink() {
       await updateDB(editingId, { title, url, type, tags });
       resetEditState();
       showStatus("Đã cập nhật link!");
-      toggleSidebar(); // 🌟 Tự đóng sidebar sau khi xong
+      toggleSidebar();
       renderLinks();
     }
   } else {
@@ -163,7 +155,7 @@ async function addLink() {
         await addToDB({ title, url, type, tags, image });
         clearInputs();
         showStatus(`${type === 'truyen' ? 'Truyện' : 'Video'} đã được lưu!`);
-        toggleSidebar(); // 🌟 Tự đóng sidebar sau khi xong
+        toggleSidebar();
         renderLinks();
       };
       reader.readAsDataURL(imgInput.files[0]);
@@ -171,7 +163,7 @@ async function addLink() {
       await addToDB({ title, url, type, tags, image });
       clearInputs();
       showStatus(`${type === 'truyen' ? 'Truyện' : 'Video'} đã được lưu!`);
-      toggleSidebar(); // 🌟 Tự đóng sidebar sau khi xong
+      toggleSidebar();
       renderLinks();
     }
   }
@@ -190,7 +182,6 @@ function editLink(id) {
     editingId = id;
     document.getElementById('addOrUpdateBtn').textContent = "Cập nhật";
     
-    // 🌟 Mở sidebar ra khi bấm nút Sửa để người dùng nhập dữ liệu luôn
     const sidebar = document.getElementById('sidebarForm');
     sidebar.classList.remove('hidden-sidebar');
     
@@ -216,13 +207,6 @@ function clearInputs() {
   if (searchInput) {
     searchInput.value = '';
   }
-
-  const jumpPageInput = document.getElementById('jumpToPage');
-  if (jumpPageInput) {
-    jumpPageInput.value = ''; 
-  }
-  currentTruyenPage = 1; 
-  currentVideoPage = 1; 
 }
 
 function filterByTag(tag) {
@@ -230,12 +214,13 @@ function filterByTag(tag) {
     selectedTag = null; 
   } else {
     selectedTag = tag;
+    const tagContainer = document.getElementById('tagContainer');
+    if (tagContainer) tagContainer.classList.add('hidden');
   }
-  currentTruyenPage = 1;
-  currentVideoPage = 1;
   renderLinks();
 }
 
+/* Bật/Tắt bảng chọn tag */
 function toggleTagCloud() {
   const tagContainer = document.getElementById('tagContainer');
   tagContainer.classList.toggle('hidden');
@@ -267,12 +252,28 @@ function selectSuggestTag(tag) {
 
 function setupClickOutside() {
   document.addEventListener('click', (e) => {
+    // 1. Xử lý click ra ngoài để ẩn gợi ý tag (giữ nguyên logic cũ)
     const container = document.querySelector('.tag-input-container');
     if (container && !container.contains(e.target)) {
       document.getElementById('tagSuggestionBox').classList.add('hidden');
     }
+
+    // 2. XỬ LÝ MỚI: Click ra ngoài để đóng Sidebar Nhập Thông Tin
+    const sidebar = document.getElementById('sidebarForm');
+    const menuToggleBtn = document.querySelector('.menu-toggle-btn');
+    
+    // Nếu Sidebar ĐANG MỞ (không chứa class hidden-sidebar)
+    if (sidebar && !sidebar.classList.contains('hidden-sidebar')) {
+      // Kiểm tra xem vị trí click có nằm NGOÀI sidebar và NGOÀI nút mở rộng không
+      if (!sidebar.contains(e.target) && !menuToggleBtn.contains(e.target)) {
+        sidebar.classList.add('hidden-sidebar'); // Đóng sidebar lại
+      }
+    }
   });
 }
+
+// Thêm một biến cờ để tránh render Tag Cloud không cần thiết
+let lastUniqueTagsStr = "";
 
 function renderTagCloud(allLinks) {
   const tagContainer = document.getElementById('tagContainer');
@@ -288,7 +289,12 @@ function renderTagCloud(allLinks) {
   });
 
   const uniqueTags = Object.keys(tagCounts).sort();
+  const currentTagsStr = uniqueTags.join(',') + `-${selectedTag}-${allLinks.length}`;
   
+  // TỐI ƯU: Nếu danh sách tag không đổi, KHÔNG dựng lại HTML để tránh lag mobile
+  if (currentTagsStr === lastUniqueTagsStr) return;
+  lastUniqueTagsStr = currentTagsStr;
+
   if (uniqueTags.length > 0) {
     suggestionBox.innerHTML = uniqueTags.map(tag => 
       `<button type="button" class="suggest-tag-btn" onclick="selectSuggestTag('${tag}')">+ ${tag}</button>`
@@ -315,6 +321,8 @@ function renderTagCloud(allLinks) {
 
 async function renderLinks() {
   const allLinks = await getAllLinks();
+  
+  // Render đám mây thẻ (Đã được tối ưu ở trên)
   renderTagCloud(allLinks);
 
   const searchValue = document.getElementById('searchInput').value.trim().toLowerCase();
@@ -327,22 +335,8 @@ async function renderLinks() {
   const truyenLinks = filteredLinks.filter(l => l.type === 'truyen');
   const videoLinks = filteredLinks.filter(l => l.type === 'video');
 
-  totalTruyenPages = Math.ceil(truyenLinks.length / itemsPerPage) || 1;
-  totalVideoPages = Math.ceil(videoLinks.length / itemsPerPage) || 1;
-
-  currentTruyenPage = Math.min(currentTruyenPage, totalTruyenPages);
-  currentVideoPage = Math.min(currentVideoPage, totalVideoPages);
-
-  const startTruyen = (currentTruyenPage - 1) * itemsPerPage;
-  const startVideo = (currentVideoPage - 1) * itemsPerPage;
-
-  const pageTruyen = truyenLinks.slice(startTruyen, startTruyen + itemsPerPage);
-  const pageVideo = videoLinks.slice(startVideo, startVideo + itemsPerPage);
-
   const truyenList = document.getElementById('truyenList');
   const videoList = document.getElementById('videoList');
-  truyenList.innerHTML = '';
-  videoList.innerHTML = '';
 
   const createHTML = (items) => {
     let wrapperHTML = '<div class="links-list-wrapper">';
@@ -364,7 +358,7 @@ async function renderLinks() {
       return `
         <div class="link-item">
           <div class="link-info">
-            <img src="${defaultImg}" alt="thumb" class="entry-thumbnail">
+            <img src="${defaultImg}" alt="thumb" class="entry-thumbnail" loading="lazy">
             <span class="link-type">${item.type === 'truyen' ? 'Truyện' : 'Video'}</span>
             <span class="link-title" id="title-${item.id}">${item.title || '(Không tiêu đề)'}</span>
             <div class="item-meta-row">
@@ -383,51 +377,19 @@ async function renderLinks() {
     return wrapperHTML;
   };
 
-  truyenList.innerHTML = pageTruyen.length ? createHTML(pageTruyen) : `<div class="empty-state">Không có truyện phù hợp.</div>`;
-  videoList.innerHTML = pageVideo.length ? createHTML(pageVideo) : `<div class="empty-state">Không có video phù hợp.</div>`;
+  truyenList.innerHTML = truyenLinks.length ? createHTML(truyenLinks) : `<div class="empty-state">Không có truyện phù hợp.</div>`;
+  videoList.innerHTML = videoLinks.length ? createHTML(videoLinks) : `<div class="empty-state">Không có video phù hợp.</div>`;
 
-  const maxTotalPages = Math.max(totalTruyenPages, totalVideoPages);
-  let displayPage = currentTruyenPage;
-  if (totalVideoPages > totalTruyenPages) {
-    displayPage = currentVideoPage;
-  }
-  
-  document.getElementById('currentPageDisplay').innerText = displayPage;
-  document.getElementById('totalPagesDisplay').innerText = maxTotalPages;
-}
+  const activeTagTruyenEl = document.getElementById('activeTag-truyen');
+  const activeTagVideoEl = document.getElementById('activeTag-video');
 
-function changePage(action) {
-  const maxTotalPages = Math.max(totalTruyenPages, totalVideoPages);
-  const displayPage = Math.max(currentTruyenPage, currentVideoPage);
-  
-  let newPage = displayPage;
-  if (action === 'prev') {
-    newPage = displayPage - 1;
-  } else if (action === 'next') {
-    newPage = displayPage + 1;
-  }
-
-  if (newPage < 1 || newPage > maxTotalPages) return;
-
-  currentTruyenPage = Math.min(newPage, totalTruyenPages);
-  currentVideoPage = Math.min(newPage, totalVideoPages);
-  renderLinks();
-}
-
-function jumpToPage() {
-  const input = document.getElementById('jumpToPage');
-  const value = parseInt(input.value);
-  const maxTotalPages = Math.max(totalTruyenPages, totalVideoPages);
-
-  if (value >= 1 && value <= maxTotalPages) {
-    currentTruyenPage = Math.min(value, totalTruyenPages);
-    currentVideoPage = Math.min(value, totalVideoPages);
-    renderLinks();
-    input.blur(); 
-    input.value = ''; 
-  } else if (!isNaN(value)) {
-    showStatus("Số trang không hợp lệ!");
-    input.value = '';
+  if (selectedTag) {
+    const tagBadgeHTML = `<span class="selected-badge-tag">#${selectedTag} <b onclick="filterByTag('${selectedTag}'); event.stopPropagation();">✕</b></span>`;
+    activeTagTruyenEl.innerHTML = truyenLinks.length > 0 ? tagBadgeHTML : '';
+    activeTagVideoEl.innerHTML = videoLinks.length > 0 ? tagBadgeHTML : '';
+  } else {
+    activeTagTruyenEl.innerHTML = '';
+    activeTagVideoEl.innerHTML = '';
   }
 }
 
