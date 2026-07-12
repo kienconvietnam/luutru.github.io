@@ -59,9 +59,9 @@
     </div>
 
     <div class="pagination">
-      <button onclick="changePage(currentPage - 1)">◀</button>
+      <button onclick="changePage('prev')">◀</button>
       <span>Trang <span id="currentPageDisplay">1</span> / <span id="totalPagesDisplay">1</span></span>
-      <button onclick="changePage(currentPage + 1)">▶</button>
+      <button onclick="changePage('next')">▶</button>
       <input type="number" id="jumpToPage" placeholder="Tới trang" min="1" onchange="jumpToPage()">
     </div>
   </div>

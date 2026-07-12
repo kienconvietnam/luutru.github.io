@@ -1,7 +1,13 @@
 const dbName = 'LinksDB';
 const storeName = 'links';
-const itemsPerPage = 15;
-let db, currentPage = 1, totalPages = 1;
+const itemsPerPage = 10; 
+
+let db;
+let currentTruyenPage = 1;
+let currentVideoPage = 1;
+let totalTruyenPages = 1;
+let totalVideoPages = 1;
+
 let editingId = null;
 let selectedTag = null; 
 
@@ -11,15 +17,14 @@ window.onload = async () => {
   restoreCollapsedState();
   renderLinks();
   setupImageSelectionText();
-  setupClickOutside(); // Lắng nghe sự kiện ẩn hộp gợi ý tag khi bấm ra ngoài
+  setupClickOutside(); 
 
-  // 🌟 ĐOẠN CODE ĐÃ SỬA: Ấn Enter ở BẤT KỲ ĐÂU cũng CHỈ hạ bàn phím, không tự lưu
   const allInputsOnPage = document.querySelectorAll('input');
   allInputsOnPage.forEach(input => {
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
-        e.preventDefault(); // Ngăn hành vi mặc định (tránh tự submit form nếu có)
-        input.blur();       // Chỉ hạ bàn phím xuống
+        e.preventDefault(); 
+        input.blur();       
       }
     });
   });
@@ -87,7 +92,6 @@ function deleteLink(id) {
   };
 }
 
-// Hàm phân tách chuỗi nhập từ ô input thành mảng các tag độc lập
 function parseTags(tagString) {
   if (!tagString) return [];
   return tagString.split(',')
@@ -148,14 +152,11 @@ function editLink(id) {
     document.getElementById('linkTitle').value = data.title;
     document.getElementById('linkUrl').value = data.url;
     document.getElementById('linkType').value = data.type;
-    // Hiển thị lại các tag cũ ngăn cách nhau bằng dấu phẩy để chỉnh sửa tiếp
     document.getElementById('linkTags').value = data.tags ? data.tags.join(', ') : '';
     document.getElementById('imageSelectedText').textContent = data.image ? "Đang giữ ảnh cũ" : "";
     editingId = id;
     document.getElementById('addOrUpdateBtn').textContent = "Cập nhật";
     showStatus("Đang sửa link...");
-    
-    // Tự động cuộn màn hình mượt lên khu vực điền thông tin để dễ thao tác trên điện thoại
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 }
@@ -174,18 +175,17 @@ function clearInputs() {
   document.getElementById('imageSelectedText').textContent = '';
   document.getElementById('tagSuggestionBox').classList.add('hidden');
   
-  // Xóa chữ trong thanh tìm kiếm khi thêm/cập nhật xong
   const searchInput = document.getElementById('searchInput');
   if (searchInput) {
     searchInput.value = '';
   }
 
-  // 🌟 ĐOẠN CODE MỚI: Xóa số trong ô nhảy trang và đưa biến currentPage về trang 1
   const jumpPageInput = document.getElementById('jumpToPage');
   if (jumpPageInput) {
-    jumpPageInput.value = ''; // Xóa trắng ô nhập số trang
+    jumpPageInput.value = ''; 
   }
-  currentPage = 1; // Đặt lại biến trang hiện tại về trang 1
+  currentTruyenPage = 1; 
+  currentVideoPage = 1; 
 }
 
 function filterByTag(tag) {
@@ -194,7 +194,8 @@ function filterByTag(tag) {
   } else {
     selectedTag = tag;
   }
-  currentPage = 1;
+  currentTruyenPage = 1;
+  currentVideoPage = 1;
   renderLinks();
 }
 
@@ -203,7 +204,6 @@ function toggleTagCloud() {
   tagContainer.classList.toggle('hidden');
 }
 
-// Bật tắt hiển thị toàn bộ tag khi danh sách tag quá dài dưới card truyện
 function toggleExpandTags(elementId) {
   const el = document.getElementById(elementId);
   if (el) {
@@ -211,7 +211,6 @@ function toggleExpandTags(elementId) {
   }
 }
 
-// Mở hộp thoại chứa các nút bấm chọn nhanh tag
 function showTagSuggestions() {
   const box = document.getElementById('tagSuggestionBox');
   if (box.children.length > 0) {
@@ -219,7 +218,6 @@ function showTagSuggestions() {
   }
 }
 
-// Thêm tag được bấm từ gợi ý vào ô input (Nối chuỗi, không lo đè mất tag cũ)
 function selectSuggestTag(tag) {
   const input = document.getElementById('linkTags');
   let currentTags = parseTags(input.value);
@@ -232,7 +230,6 @@ function selectSuggestTag(tag) {
   input.focus();
 }
 
-// Tự động đóng hộp gợi ý tag khi bấm ra khu vực bên ngoài ô nhập
 function setupClickOutside() {
   document.addEventListener('click', (e) => {
     const container = document.querySelector('.tag-input-container');
@@ -257,7 +254,6 @@ function renderTagCloud(allLinks) {
 
   const uniqueTags = Object.keys(tagCounts).sort();
   
-  // Tạo danh sách các nút bấm tag gợi ý thông minh đổ vào hộp chọn nhanh
   if (uniqueTags.length > 0) {
     suggestionBox.innerHTML = uniqueTags.map(tag => 
       `<button type="button" class="suggest-tag-btn" onclick="selectSuggestTag('${tag}')">+ ${tag}</button>`
@@ -271,7 +267,6 @@ function renderTagCloud(allLinks) {
     return;
   }
 
-  // Tạo các nút tag dùng để lọc danh sách
   tagContainer.innerHTML = `
     <button class="tag-btn ${selectedTag === null ? 'active' : ''}" onclick="filterByTag(null)">
       Tất cả (${allLinks.length})
@@ -298,12 +293,17 @@ async function renderLinks() {
   const truyenLinks = filteredLinks.filter(l => l.type === 'truyen');
   const videoLinks = filteredLinks.filter(l => l.type === 'video');
 
-  totalPages = Math.ceil(filteredLinks.length / itemsPerPage);
-  currentPage = Math.min(currentPage, totalPages || 1);
-  const start = (currentPage - 1) * itemsPerPage;
+  totalTruyenPages = Math.ceil(truyenLinks.length / itemsPerPage) || 1;
+  totalVideoPages = Math.ceil(videoLinks.length / itemsPerPage) || 1;
 
-  const pageTruyen = truyenLinks.slice(start, start + itemsPerPage);
-  const pageVideo = videoLinks.slice(start, start + itemsPerPage);
+  currentTruyenPage = Math.min(currentTruyenPage, totalTruyenPages);
+  currentVideoPage = Math.min(currentVideoPage, totalVideoPages);
+
+  const startTruyen = (currentTruyenPage - 1) * itemsPerPage;
+  const startVideo = (currentVideoPage - 1) * itemsPerPage;
+
+  const pageTruyen = truyenLinks.slice(startTruyen, startTruyen + itemsPerPage);
+  const pageVideo = videoLinks.slice(startVideo, startVideo + itemsPerPage);
 
   const truyenList = document.getElementById('truyenList');
   const videoList = document.getElementById('videoList');
@@ -311,12 +311,9 @@ async function renderLinks() {
   videoList.innerHTML = '';
 
   const createHTML = (items) => {
-    // 🌟 SỬA ĐỔI: Thêm thẻ bọc ngoài cùng dạng Grid cho danh sách card truyện/video
     let wrapperHTML = '<div class="links-list-wrapper">';
-    
     wrapperHTML += items.map(item => {
       let tagsHTML = '';
-      
       if (item.tags && item.tags.length > 0) {
         tagsHTML = `
           <div class="item-tags-wrapper" onclick="toggleExpandTags('tags-${item.id}'); event.stopPropagation();">
@@ -328,7 +325,6 @@ async function renderLinks() {
         `;
       }
 
-      // 🌟 SỬA ĐỔI THỨ TỰ: Đưa ảnh bìa (thumbnail) lên vị trí đầu tiên của link-info, tiêu đề đứng ngay dưới ảnh bìa
       const defaultImg = item.image ? item.image : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100%" height="100%" fill="%23eaeef3"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="12" fill="%237f8c8d">No Cover</text></svg>';
 
       return `
@@ -337,11 +333,9 @@ async function renderLinks() {
             <img src="${defaultImg}" alt="thumb" class="entry-thumbnail">
             <span class="link-type">${item.type === 'truyen' ? 'Truyện' : 'Video'}</span>
             <span class="link-title" id="title-${item.id}">${item.title || '(Không tiêu đề)'}</span>
-            
             <div class="item-meta-row">
               ${tagsHTML}
             </div>
-            
             <button class="view-btn" onclick="markAsViewed(${item.id}); window.open('${item.url}', '_blank')">Xem</button>
           </div>
           <div class="link-actions">
@@ -351,7 +345,6 @@ async function renderLinks() {
         </div>
       `;
     }).join('');
-
     wrapperHTML += '</div>';
     return wrapperHTML;
   };
@@ -359,22 +352,52 @@ async function renderLinks() {
   truyenList.innerHTML = pageTruyen.length ? createHTML(pageTruyen) : `<div class="empty-state">Không có truyện phù hợp.</div>`;
   videoList.innerHTML = pageVideo.length ? createHTML(pageVideo) : `<div class="empty-state">Không có video phù hợp.</div>`;
 
-  document.getElementById('currentPageDisplay').innerText = currentPage;
-  document.getElementById('totalPagesDisplay').innerText = totalPages || 1;
+  // 🌟 ĐÃ SỬA: Lấy số trang hiển thị dựa trên giá trị trang hiện tại lớn hơn để làm mốc hiển thị thanh điều hướng đáy
+  const maxTotalPages = Math.max(totalTruyenPages, totalVideoPages);
+  const displayPage = Math.max(currentTruyenPage, currentVideoPage);
+  
+  document.getElementById('currentPageDisplay').innerText = displayPage;
+  document.getElementById('totalPagesDisplay').innerText = maxTotalPages;
 }
 
-function changePage(newPage) {
-  if (newPage < 1 || newPage > totalPages) return;
-  currentPage = newPage;
+// 🌟 ĐÃ CẬP NHẬT: Xử lý tăng/giảm trang chính xác theo chu kỳ độc lập
+function changePage(action) {
+  const maxTotalPages = Math.max(totalTruyenPages, totalVideoPages);
+  const displayPage = Math.max(currentTruyenPage, currentVideoPage);
+  
+  let newPage = displayPage;
+  if (action === 'prev') {
+    newPage = displayPage - 1;
+  } else if (action === 'next') {
+    newPage = displayPage + 1;
+  }
+
+  if (newPage < 1 || newPage > maxTotalPages) return;
+
+  // Cập nhật số trang cho từng danh mục dựa trên giới hạn riêng của nó
+  currentTruyenPage = Math.min(newPage, totalTruyenPages);
+  currentVideoPage = Math.min(newPage, totalVideoPages);
+
   renderLinks();
 }
 
+// 🌟 ĐÃ CẬP NHẬT: Nhảy trang chính xác và xóa giá trị ô nhập sau khi hoàn tất
 function jumpToPage() {
   const input = document.getElementById('jumpToPage');
   const value = parseInt(input.value);
-  if (value >= 1 && value <= totalPages) {
-    currentPage = value;
+  const maxTotalPages = Math.max(totalTruyenPages, totalVideoPages);
+
+  if (value >= 1 && value <= maxTotalPages) {
+    currentTruyenPage = Math.min(value, totalTruyenPages);
+    currentVideoPage = Math.min(value, totalVideoPages);
     renderLinks();
+    
+    // Đưa tiêu điểm ra ngoài và xóa trống ô nhập cho đẹp
+    input.blur(); 
+    input.value = ''; 
+  } else if (!isNaN(value)) {
+    showStatus("Số trang không hợp lệ!");
+    input.value = '';
   }
 }
 
