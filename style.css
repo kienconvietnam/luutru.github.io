@@ -115,7 +115,7 @@ button:hover {
   width: 100%;
 }
 
-/* 🌟 HỘP GỢI Ý TAG: Đã thu nhỏ chiều cao để không che khuất phần phân loại bên dưới */
+/* HỘP GỢI Ý TAG */
 .tag-suggestion-box {
   position: absolute;
   top: 105%;
@@ -174,7 +174,7 @@ button:hover {
   align-items: center;
 }
 
-/* 🌟 THANH TÌM KIẾM VÀ BỘ LỌC: Đã sửa khoảng cách margin-top để không dính sát khung trên */
+/* THANH TÌM KIẾM VÀ BỘ LỌC */
 .search-filter-wrapper {
   display: flex;
   justify-content: center;
@@ -265,17 +265,17 @@ button:hover {
   box-shadow: var(--shadow-glow);
 }
 
-/* 🌟 LỚP BỌC LƯỚI: ĐÃ SỬA LỖI LỆCH KHUNG BẰNG CÁCH CĂN GIỮA TOÀN BỘ KHỐI CHỨA CARD */
+/* LỚP BỌC LƯỚI TRÊN DESKTOP */
 .links-list-wrapper {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 16px;
   padding-top: 10px;
-  justify-content: center; /* Đảm bảo các card luôn căn giữa nếu hàng không đầy dữ liệu */
+  justify-content: center;
   max-width: 100%;
 }
 
-/* 🌟 THIẾT KẾ CARD TRUYỆN: Chuyển hoàn toàn sang khối đứng ô cờ */
+/* THIẾT KẾ CARD TRUYỆN */
 .link-item {
   background-color: var(--secondary-color);
   border: 1px solid #eef2f5;
@@ -305,7 +305,7 @@ button:hover {
   flex-grow: 1;
 }
 
-/* 🌟 TIÊU ĐỀ: Nằm dưới ảnh bìa, giới hạn tối đa 2 dòng cho đều nhau */
+/* TIÊU ĐỀ TRUYỆN */
 .link-title {
   font-weight: 700;
   font-size: 0.95em;
@@ -319,7 +319,7 @@ button:hover {
   height: 2.6em;
 }
 
-/* 🌟 ẢNH BÌA TRUYỆN DẠNG ĐỨNG CHUẨN ĐỀU NHAU */
+/* ẢNH BÌA TRUYỆN */
 .entry-thumbnail {
   width: 100%;
   height: 210px;
@@ -332,7 +332,7 @@ button:hover {
   background-color: #eaeef3;
 }
 
-/* 🌟 NÚT XEM TRUYỆN DƯỚI ĐÁY CARD */
+/* NÚT XEM */
 .view-btn {
   width: 100%;
   padding: 6px 0;
@@ -391,7 +391,6 @@ button:hover {
   max-height: 200px;
 }
 
-/* Custom các thẻ tag nhỏ xinh và nổi bật */
 .item-tag {
   background-color: rgba(0, 210, 255, 0.1);
   color: #0088cc;
@@ -415,7 +414,7 @@ button:hover {
   font-weight: bold;
 }
 
-/* 🌟 CÁC NÚT SỬA / XÓA THU GỌN TINH TẾ ĐƯỢC XẾP ĐỀU NHAU Ở ĐÁY THẺ */
+/* CÁC NÚT SỬA / XÓA THU GỌN */
 .link-actions {
   display: flex;
   gap: 6px;
@@ -487,19 +486,44 @@ button:hover {
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* 🌟 RESPONSIVE: Đảm bảo hiển thị đúng 2 cột cực đẹp trên điện thoại di động */
+/* MÀN HÌNH TABLET VÀ ĐIỆN THOẠI LỚN */
 @media (max-width: 768px) {
   .input-row {
     flex-direction: column;
   }
 }
 
+/* 🌟 PHẦN SỬA LỖI ĐÃ ĐƯỢC CẬP NHẬT TỐI ƯU CHO GIAO DIỆN DI ĐỘNG (DƯỚI 480PX) */
 @media (max-width: 480px) {
-  /* 🌟 ĐÃ CẬP NHẬT: Sử dụng auto-fit để tự động chia đều tỷ lệ màn hình điện thoại mà không làm lệch vẹo card */
-  .links-list-wrapper {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 10px;
+  /* Khống chế và cân bằng lại toàn bộ khoảng đệm tổng của khung chứa */
+  .container {
+    padding: 10px !important; 
   }
+  
+  /* Triệt tiêu độ lệch của hộp chứa bao bọc cột Truyện/Video */
+  .links-container {
+    padding: 12px !important;
+    width: 100% !important;
+    overflow: hidden;
+  }
+
+  /* Ép lưới hiển thị chia đều 50%-50% tuyệt đối, triệt tiêu khoảng trống thừa ở hai bên rìa */
+  .links-list-wrapper {
+    grid-template-columns: repeat(2, 1fr) !important; 
+    gap: 8px !important; 
+    width: 100% !important;
+    padding-left: 0 !important;  
+    padding-right: 0 !important; 
+    margin: 0 auto !important;
+  }
+
+  /* Đảm bảo từng card truyện khít theo tỷ lệ lưới đã chia */
+  .link-item {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
   .entry-thumbnail {
     height: 180px;
   }
