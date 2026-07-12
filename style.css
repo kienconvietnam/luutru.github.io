@@ -265,12 +265,14 @@ button:hover {
   box-shadow: var(--shadow-glow);
 }
 
-/* 🌟 LỚP BỌC LƯỚI: Kích hoạt hiển thị dạng ô cờ nhiều cột */
+/* 🌟 LỚP BỌC LƯỚI: ĐÃ SỬA LỖI LỆCH KHUNG BẰNG CÁCH CĂN GIỮA TOÀN BỘ KHỐI CHỨA CARD */
 .links-list-wrapper {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 16px;
   padding-top: 10px;
+  justify-content: center; /* Đảm bảo các card luôn căn giữa nếu hàng không đầy dữ liệu */
+  max-width: 100%;
 }
 
 /* 🌟 THIẾT KẾ CARD TRUYỆN: Chuyển hoàn toàn sang khối đứng ô cờ */
@@ -493,8 +495,9 @@ button:hover {
 }
 
 @media (max-width: 480px) {
+  /* 🌟 ĐÃ CẬP NHẬT: Sử dụng auto-fit để tự động chia đều tỷ lệ màn hình điện thoại mà không làm lệch vẹo card */
   .links-list-wrapper {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 10px;
   }
   .entry-thumbnail {

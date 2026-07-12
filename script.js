@@ -293,9 +293,11 @@ async function renderLinks() {
   const truyenLinks = filteredLinks.filter(l => l.type === 'truyen');
   const videoLinks = filteredLinks.filter(l => l.type === 'video');
 
+  // Tính toán tổng số trang chuẩn xác cho từng danh mục riêng biệt
   totalTruyenPages = Math.ceil(truyenLinks.length / itemsPerPage) || 1;
   totalVideoPages = Math.ceil(videoLinks.length / itemsPerPage) || 1;
 
+  // Giữ số trang hiện tại không vượt quá tổng số trang thật
   currentTruyenPage = Math.min(currentTruyenPage, totalTruyenPages);
   currentVideoPage = Math.min(currentVideoPage, totalVideoPages);
 
@@ -352,12 +354,44 @@ async function renderLinks() {
   truyenList.innerHTML = pageTruyen.length ? createHTML(pageTruyen) : `<div class="empty-state">Không có truyện phù hợp.</div>`;
   videoList.innerHTML = pageVideo.length ? createHTML(pageVideo) : `<div class="empty-state">Không có video phù hợp.</div>`;
 
-  // 🌟 ĐÃ SỬA: Lấy số trang hiển thị dựa trên giá trị trang hiện tại lớn hơn để làm mốc hiển thị thanh điều hướng đáy
+  // 🌟 SỬA TẠI ĐÂY: Hiển thị thông tin phân trang dựa trên danh mục có nhiều trang nhất một cách tường minh
+  // Tuy nhiên, số trang hiện tại hiển thị sẽ dựa trên trạng thái thực tế của danh mục đó, không gán chung chung làm sinh ra trang trống.
   const maxTotalPages = Math.max(totalTruyenPages, totalVideoPages);
-  const displayPage = Math.max(currentTruyenPage, currentVideoPage);
+  
+  // Nếu danh mục truyện đang hiển thị nhiều trang hơn hoặc bằng thì lấy mốc truyen, ngược lại lấy mốc video
+  let displayPage = currentTruyenPage;
+  if (totalVideoPages > totalTruyenPages) {
+    displayPage = currentVideoPage;
+  }
   
   document.getElementById('currentPageDisplay').innerText = displayPage;
   document.getElementById('totalPagesDisplay').innerText = maxTotalPages;
+}
+
+// 🌟 SỬA TẠI ĐÂY: Chuyển trang thông minh, kiểm tra giới hạn độc lập cho từng cột dữ liệu
+function changePage(action) {
+  let targetTruyenPage = currentTruyenPage;
+  let targetVideoPage = currentVideoPage;
+
+  if (action === 'prev') {
+    targetTruyenPage = currentTruyenPage - 1;
+    targetVideoPage = currentVideoPage - 1;
+  } else if (action === 'next') {
+    targetTruyenPage = currentTruyenPage + 1;
+    targetVideoPage = currentVideoPage + 1;
+  }
+
+  // Kiểm tra và ràng buộc điều kiện trang cho Truyện độc lập
+  if (targetTruyenPage >= 1 && targetTruyenPage <= totalTruyenPages) {
+    currentTruyenPage = targetTruyenPage;
+  }
+  
+  // Kiểm tra và ràng buộc điều kiện trang cho Video độc lập
+  if (targetVideoPage >= 1 && targetVideoPage <= totalVideoPages) {
+    currentVideoPage = targetVideoPage;
+  }
+
+  renderLinks();
 }
 
 // 🌟 ĐÃ CẬP NHẬT: Xử lý tăng/giảm trang chính xác theo chu kỳ độc lập
