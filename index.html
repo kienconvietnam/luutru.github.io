@@ -43,6 +43,51 @@
         <button id="addOrUpdateBtn" onclick="addLink()">Thêm Link</button>
       </div>
     </div>
+
+    <!-- PHẦN XUẤT/NHẬP DỮ LIỆU TỐI ƯU CHO ĐIỆN THOẠI -->
+<div class="backup-section" style="margin-top: 30px; border-top: 2px dashed #eaeef3; padding-top: 20px;">
+  <h3 style="font-size: 1.1em; color: #1f4068; margin-bottom: 15px; text-align: center;">💾 Sao lưu & Khôi phục</h3>
+  
+  <div style="display: flex; flex-direction: column; gap: 12px;">
+    <!-- Nút Xuất File (To, dễ bấm trên màn hình cảm ứng) -->
+    <button type="button" onclick="exportBackupData()" style="
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); 
+      padding: 14px; 
+      font-size: 1rem; 
+      border-radius: 8px;
+      font-weight: bold;
+      box-shadow: 0 4px 10px rgba(76,175,80,0.3);
+    ">
+      📤 Tải File Sao Lưu (.json)
+    </button>
+    
+    <!-- Khu vực Nhập File thiết kế riêng cho Mobile -->
+    <div style="position: relative; width: 100%;">
+      <input type="file" id="importFile" accept=".json" onchange="importBackupData(event)" style="
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+        z-index: 2;
+      ">
+      <button type="button" style="
+        width: 100%;
+        background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%); 
+        padding: 14px; 
+        font-size: 1rem;
+        border-radius: 8px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(156,39,176,0.3);
+        pointer-events: none; /* Để lượt chạm xuyên xuống input file phía dưới */
+      ">
+        📥 Chọn File Khôi Phục
+      </button>
+    </div>
+  </div>
+</div>
   </div>
 
   <!-- KHU VỰC CHÍNH HIỂN THỊ DANH SÁCH -->
@@ -51,7 +96,6 @@
       <h1>Quản lý Truyện & Video</h1>
     </header>
 
-    <!-- Chỉ giữ lại thanh tìm kiếm và nút Thẻ lọc -->
     <div class="search-filter-wrapper">
       <div class="search-box-container">
         <span class="search-icon">🔍</span>
@@ -68,7 +112,6 @@
           <h2 onclick="toggleSection('truyen')" style="margin-bottom: 0; border-bottom: none; padding-bottom: 0; cursor: pointer; display: flex; align-items: center;">
             Truyện <button class="toggle-btn" id="toggle-truyen">−</button>
           </h2>
-          <!-- Nơi hiển thị tag được chọn của Truyện -->
           <span id="activeTag-truyen"></span>
         </div>
         <div id="truyenList"></div>
@@ -79,7 +122,6 @@
           <h2 onclick="toggleSection('video')" style="margin-bottom: 0; border-bottom: none; padding-bottom: 0; cursor: pointer; display: flex; align-items: center;">
             Video <button class="toggle-btn" id="toggle-video">+</button>
           </h2>
-          <!-- Nơi hiển thị tag được chọn của Video -->
           <span id="activeTag-video"></span>
         </div>
         <div id="videoList"></div>
