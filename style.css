@@ -50,7 +50,7 @@ body {
 
 /* THANH SIDEBAR ẨN/HIỆN */
 .sidebar {
-  position: fixed;
+  position: fixed;  
   top: 0;
   left: 0;
   width: 320px;
@@ -548,6 +548,7 @@ header h1 {
   }
 }
 
+/* TÌM VÀ CẬP NHẬT LẠI ĐOẠN NÀY Ở CUỐI FILE style.css */
 .selected-badge-tag {
   background: linear-gradient(135deg, var(--accent-color) 0%, #00a8cc 100%);
   color: white;
@@ -559,7 +560,21 @@ header h1 {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  animation: fadeIn 0.2s ease;
+  /* Thêm thuộc tính này giúp tối ưu chuyển động vuốt */
+  touch-action: none; 
+  user-select: none;
+  will-change: transform, opacity;
+}
+
+/* Ẩn nút X trên di động vì đã có tính năng vuốt, nhưng giữ lại trên PC để bấm */
+@media (max-width: 480px) {
+  .selected-badge-tag b {
+    display: none !important; /* Trên mobile giấu nút X đi cho đẹp */
+  }
+  .selected-badge-tag {
+    padding: 6px 14px; /* Tăng nhẹ padding cho dễ chạm và vuốt */
+    font-size: 0.85em;
+  }
 }
 
 .selected-badge-tag b {

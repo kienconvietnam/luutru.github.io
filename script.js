@@ -380,11 +380,21 @@ async function renderLinks() {
   truyenList.innerHTML = truyenLinks.length ? createHTML(truyenLinks) : `<div class="empty-state">Không có truyện phù hợp.</div>`;
   videoList.innerHTML = videoLinks.length ? createHTML(videoLinks) : `<div class="empty-state">Không có video phù hợp.</div>`;
 
+ // TÌM ĐOẠN NÀY Ở CUỐI HÀM renderLinks() VÀ THAY THẾ
   const activeTagTruyenEl = document.getElementById('activeTag-truyen');
   const activeTagVideoEl = document.getElementById('activeTag-video');
 
   if (selectedTag) {
-    const tagBadgeHTML = `<span class="selected-badge-tag">#${selectedTag} <b onclick="filterByTag('${selectedTag}'); event.stopPropagation();">✕</b></span>`;
+    // Tạo cấu trúc thẻ hỗ trợ cả click (cho PC) và vuốt (cho Mobile)
+    const tagBadgeHTML = `
+      <span class="selected-badge-tag active-swipe-tag" 
+            onclick="filterByTag('${selectedTag}')"
+            ontouchstart="handleTagTouchStart(event)" 
+            ontouchmove="handleTagTouchMove(event)" 
+            ontouchend="handleTagTouchEnd(event, '${selectedTag}')">
+        #${selectedTag} <b>✕</b>
+      </span>
+    `;
     activeTagTruyenEl.innerHTML = truyenLinks.length > 0 ? tagBadgeHTML : '';
     activeTagVideoEl.innerHTML = videoLinks.length > 0 ? tagBadgeHTML : '';
   } else {
@@ -457,5 +467,54 @@ function markAsViewed(id) {
   const titleEl = document.getElementById(`title-${id}`);
   if (titleEl) {
     titleEl.style.color = '#bbb';
+  }
+}
+// Biến lưu vị trí ngón tay khi bắt đầu chạm
+let touchStartY = 0;
+let touchStartX = 0;
+
+function handleTagTouchStart(e) {
+  // Lưu vị trí chạm ban đầu
+  touchStartY = e.touches[0].clientY;
+  touchStartX = e.touches[0].clientX;
+  e.currentTarget.style.transition = 'none'; // Tắt hiệu ứng mượt tạm thời khi đang vuốt
+}
+
+function handleTagTouchMove(e) {
+  const currentY = e.touches[0].clientY;
+  const deltaY = currentY - touchStartY;
+
+  // Chỉ xử lý nếu người dùng đang vuốt LÊN (deltaY số âm)
+  if (deltaY < 0) {
+    // Ngăn cuộn trang web khi đang vuốt tag
+    e.preventDefault(); 
+    
+    // Di chuyển cái tag đi lên theo ngón tay một chút để tạo cảm giác thực tế
+    e.currentTarget.style.transform = `translate3d(0, ${deltaY}px, 0)`;
+    // Làm mờ dần tag khi vuốt lên cao
+    e.currentTarget.style.opacity = Math.max(0, 1 + deltaY / 60); 
+  }
+}
+
+function handleTagTouchEnd(e, tag) {
+  const touchEndY = e.changedTouches[0].clientY;
+  const deltaY = touchEndY - touchStartY;
+  const targetEl = e.currentTarget;
+
+  // Nếu vuốt lên một khoảng hơn 35px thì kích hoạt xóa tag
+  if (deltaY < -35) {
+    targetEl.style.transition = 'all 0.2s ease';
+    targetEl.style.transform = 'translate3d(0, -80px, 0)'; // Bay lên hẳn
+    targetEl.style.opacity = '0';
+    
+    // Đợi hiệu ứng bay lên hoàn thành rồi thực hiện xóa lọc
+    setTimeout(() => {
+      filterByTag(tag);
+    }, 200020 - 200000); // ~200ms
+  } else {
+    // Nếu vuốt chưa đủ độ cao, trả tag về vị trí cũ mượt mà
+    targetEl.style.transition = 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+    targetEl.style.transform = 'translate3d(0, 0, 0)';
+    targetEl.style.opacity = '1';
   }
 }
