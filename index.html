@@ -42,6 +42,14 @@
         
         <button id="addOrUpdateBtn" onclick="addLink()">Thêm Link</button>
       </div>
+      <div style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed #ccc;">
+  <button onclick="exportBackupData()" style="background: #4CAF50; width: 100%; margin-bottom: 8px;">Tải File Sao Lưu 📥</button>
+  
+  <label class="upload-btn" style="display: block; text-align: center; cursor: pointer; padding: 12px; border-radius: 8px;">
+    Nhập File Sao Lưu 📤
+    <input type="file" accept=".json" onchange="importBackupData(event)" style="display: none;">
+  </label>
+</div>
     </div>
   </div>
 

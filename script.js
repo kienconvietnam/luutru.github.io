@@ -518,3 +518,52 @@ function handleTagTouchEnd(e, tag) {
     targetEl.style.opacity = '1';
   }
 }
+// 1. Hàm xuất toàn bộ dữ liệu thành file JSON để tải về máy
+async function exportBackupData() {
+  const allLinks = await getAllLinks();
+  if (allLinks.length === 0) {
+    showStatus("Không có dữ liệu để xuất!");
+    return;
+  }
+  
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allLinks));
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.setAttribute("href", dataStr);
+  downloadAnchor.setAttribute("download", "quan_ly_links_backup.json");
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
+  showStatus("Đã xuất file sao lưu thành công!");
+}
+
+// 2. Hàm nhập dữ liệu từ file JSON vào trình duyệt mới
+function importBackupData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    try {
+      const importedData = JSON.parse(e.target.result);
+      if (Array.isArray(importedData)) {
+        for (const item of importedData) {
+          // Xóa bớt thuộc tính id cũ để IndexedDB tự tăng id mới, tránh trùng lặp
+          const { id, ...cleanItem } = item; 
+          
+          // Kiểm tra xem trùng URL không trước khi nạp vào
+          const isDuplicate = await isUrlDuplicate(cleanItem.url);
+          if (!isDuplicate) {
+            await addToDB(cleanItem);
+          }
+        }
+        showStatus("Đã khôi phục dữ liệu thành công!");
+        renderLinks();
+      } else {
+        showStatus("Lỗi: Định dạng file không hợp lệ!");
+      }
+    } catch (err) {
+      showStatus("Lỗi: Không thể đọc file sao lưu!");
+    }
+  };
+  reader.readAsText(file);
+}
