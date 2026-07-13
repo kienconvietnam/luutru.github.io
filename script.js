@@ -500,87 +500,84 @@ function handleTagTouchEnd(e, tag) {
 }
 
 /* ====================================================
-   HÀM XỬ LÝ XUẤT VÀ NHẬP DỮ LIỆU - TỐI ƯU DI ĐỘNG
+   BỘ ĐÔI HÀM SAO LƯU NHANH BẰNG TEXT (ĐÃ SỬA LỖI ZALO CHẶN)
    ==================================================== */
 
-// Hàm xuất dữ liệu thành file JSON tải về điện thoại
-async function exportBackupData() {
+// Hàm chạy bên Zalo: Lấy dữ liệu và nhồi trực tiếp vào ô để copy tay nếu bị chặn
+async function copyBackupToClipboard() {
   try {
     const allLinks = await getAllLinks();
     if (allLinks.length === 0) {
-      showStatus("Lỗi: Không có dữ liệu để xuất!");
+      showStatus("Lỗi: Không có dữ liệu để copy!");
       return;
     }
-
-    // Đảo mảng để giữ đúng thứ tự khi nhập vào máy mới
     const exportData = [...allLinks].reverse();
-    const jsonString = JSON.stringify(exportData, null, 2);
+    const jsonString = JSON.stringify(exportData);
     
-    // Tạo Blob chuẩn ứng dụng
-    const blob = new Blob([jsonString], { type: "application/json;charset=utf-8;" });
-    
-    // Tạo mốc thời gian thực tế cho tên file gọn gàng
-    const now = new Date();
-    const timeStr = `${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}`;
-    const fileName = `Backup_Links_${timeStr}.json`;
+    // Đẩy thẳng chuỗi dữ liệu vào ô Textarea để người dùng tự copy thủ công
+    const textArea = document.getElementById('backupTextArea');
+    if (textArea) {
+      textArea.value = jsonString;
+      textArea.select(); // Bôi đen toàn bộ chuỗi chữ
+    }
 
-    // Kích hoạt cơ chế ép tải xuống (Force Download) trên Android
-    const downloadLink = document.createElement("a");
-    downloadLink.href = URL.createObjectURL(blob);
-    downloadLink.download = fileName;
-    
-    // Thuộc tính bắt buộc cho một số trình duyệt mobile cũ
-    downloadLink.setAttribute('data-downloadurl', ['application/json', downloadLink.download, downloadLink.href].join(':'));
-    
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    
-    // Giải phóng bộ nhớ sau khi tải
-    setTimeout(() => {
-      document.body.removeChild(downloadLink);
-      URL.revokeObjectURL(downloadLink.href);
-    }, 100);
-
-    showStatus("Đã tải xong! Kiểm tra thư mục 'Tải về' (Downloads)");
+    // Vẫn cố thử kích hoạt lệnh sao chép tự động
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(jsonString);
+        showStatus("Đã tự copy và hiển thị mã ở ô dưới!");
+      } else {
+        const tempInput = document.createElement("textarea");
+        tempInput.value = jsonString;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand("copy");
+        document.body.removeChild(tempInput);
+        showStatus("Đã tự copy và hiển thị mã ở ô dưới!");
+      }
+    } catch (e) {
+      // Thông báo khi bị Zalo chặn ngầm
+      showStatus("Zalo chặn tự động! Hãy copy tay đoạn mã ở ô dưới.");
+    }
   } catch (err) {
     console.error(err);
     showStatus("Lỗi: Không thể xuất dữ liệu!");
   }
 }
 
-// Hàm đọc file JSON từ bộ nhớ điện thoại để nạp vào game/app
-function importBackupData(event) {
-  const file = event.target.files[0];
-  if (!file) return;
+// Hàm chạy bên Chrome: Đọc chuỗi văn bản vừa dán vào để khôi phục dữ liệu truyện/video
+async function importBackupFromTextArea() {
+  const textArea = document.getElementById('backupTextArea');
+  if (!textArea) return;
+  
+  const textData = textArea.value.trim();
+  if (!textData) {
+    showStatus("Vui lòng dán mã dữ liệu vào ô trống!");
+    return;
+  }
 
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    try {
-      const importedData = JSON.parse(e.target.result);
-      if (!Array.isArray(importedData)) {
-        showStatus("Lỗi: Định dạng file không đúng!");
-        return;
-      }
-
-      let importCount = 0;
-      for (const item of importedData) {
-        // Kiểm tra trùng lặp URL để tránh nạp đè dữ liệu cũ sẵn có
-        const isDuplicate = await isUrlDuplicate(item.url);
-        if (!isDuplicate) {
-          // Bỏ ID cũ để IndexedDB tự tạo ID mới tăng dần ổn định
-          const { id, ...cleanItem } = item; 
-          await addToDB(cleanItem);
-          importCount++;
-        }
-      }
-
-      showStatus(`Thành công! Đã thêm ${importCount} mục mới.`);
-      document.getElementById('importFile').value = ''; // Reset input để lần sau chọn lại file cũ vẫn ăn
-      renderLinks();
-    } catch (err) {
-      console.error(err);
-      showStatus("Lỗi: File bị lỗi hoặc không hợp lệ!");
+  try {
+    const importedData = JSON.parse(textData);
+    if (!Array.isArray(importedData)) {
+      showStatus("Lỗi: Mã dữ liệu không đúng cấu trúc!");
+      return;
     }
-  };
-  reader.readAsText(file);
+
+    let importCount = 0;
+    for (const item of importedData) {
+      const isDuplicate = await isUrlDuplicate(item.url);
+      if (!isDuplicate) {
+        const { id, ...cleanItem } = item; 
+        await addToDB(cleanItem);
+        importCount++;
+      }
+    }
+
+    showStatus(`Thành công! Đã khôi phục ${importCount} danh mục.`);
+    textArea.value = ''; 
+    renderLinks();
+  } catch (err) {
+    console.error(err);
+    showStatus("Lỗi: Mã bị thiếu hoặc sai cấu trúc!");
+  }
 }
