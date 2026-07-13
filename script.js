@@ -569,34 +569,56 @@ async function exportBackupData() {
     }
   }
 }
-// 2. Hàm nhập dữ liệu từ file JSON vào trình duyệt mới
-function importBackupData(event) {
-  const file = event.target.files[0];
-  if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = async function(e) {
-    try {
-      const importedData = JSON.parse(e.target.result);
-      if (Array.isArray(importedData)) {
-        for (const item of importedData) {
-          // Xóa bớt thuộc tính id cũ để IndexedDB tự tăng id mới, tránh trùng lặp
-          const { id, ...cleanItem } = item; 
-          
-          // Kiểm tra xem trùng URL không trước khi nạp vào
-          const isDuplicate = await isUrlDuplicate(cleanItem.url);
-          if (!isDuplicate) {
-            await addToDB(cleanItem);
-          }
-        }
-        showStatus("Đã khôi phục dữ liệu thành công!");
-        renderLinks();
-      } else {
-        showStatus("Lỗi: Định dạng file không hợp lệ!");
-      }
-    } catch (err) {
-      showStatus("Lỗi: Không thể đọc file sao lưu!");
+// Hàm xuất file sao lưu kết hợp tự sao chép dữ liệu để chống lỗi trình duyệt Zalo
+async function exportBackupData() {
+  const allLinks = await getAllLinks();
+  if (allLinks.length === 0) {
+    showStatus("Không có dữ liệu để xuất!");
+    return;
+  }
+  
+  const jsonString = JSON.stringify(allLinks, null, 2);
+
+  // Tự động sao chép dữ liệu vào Clipboard trước để dự phòng
+  try {
+    await navigator.clipboard.writeText(jsonString);
+    showStatus("Đã sao chép dữ liệu sao lưu vào bộ nhớ tạm!");
+  } catch (err) {
+    console.log("Không thể tự động sao chép");
+  }
+
+  try {
+    const file = new File([jsonString], "quan_ly_links_backup.txt", {
+      type: "text/plain",
+    });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        files: [file],
+        title: "Sao lưu dữ liệu",
+        text: "Tệp sao lưu ứng dụng Quản lý Truyện & Video",
+      });
+    } else {
+      const blob = new Blob([jsonString], { type: "text/plain;charset=utf-8" });
+      const blobUrl = URL.createObjectURL(blob);
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.href = blobUrl;
+      downloadAnchor.download = "quan_ly_links_backup.txt";
+      
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      
+      setTimeout(() => {
+        document.body.removeChild(downloadAnchor);
+        URL.revokeObjectURL(blobUrl);
+      }, 100);
     }
-  };
-  reader.readAsText(file);
+  } catch (err) {
+    if (err.name !== 'AbortError') {
+      console.error(err);
+      // Nếu các phương pháp tải file đều thất bại (như trên Zalo), báo cho người dùng dán dữ liệu ra ghi chú
+      alert("Trình duyệt hạn chế tải file! Dữ liệu khôi phục ĐÃ ĐƯỢC SAO CHÉP, vui lòng mở ứng dụng Ghi chú hoặc tin nhắn và nhấn 'Dán' (Paste) để lưu lại nhé!");
+    }
+  }
 }
