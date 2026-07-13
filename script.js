@@ -5,11 +5,18 @@ let db;
 let editingId = null;
 let selectedTag = null; 
 
+// Biến lưu cache danh sách để không phải đọc lại IndexedDB liên tục
+let cachedLinks = []; 
+
 window.onload = async () => {
   await initDB();
   await migrateFromLocalStorage();
   restoreCollapsedState();
+  
+  // Tải dữ liệu lần đầu tiên và lưu vào bộ nhớ đệm cache
+  cachedLinks = await getAllLinksFromDB();
   renderLinks();
+  
   setupImageSelectionText();
   setupClickOutside(); 
 
@@ -52,7 +59,7 @@ function addToDB(data) {
   return new Promise(resolve => {
     const tx = db.transaction(storeName, 'readwrite');
     const store = tx.objectStore(storeName);
-    store.add(data).onsuccess = resolve;
+    store.add(data).onsuccess = () => resolve();
   });
 }
 
@@ -64,12 +71,13 @@ function updateDB(id, newData) {
     request.onsuccess = () => {
       const record = request.result;
       const updated = { ...record, ...newData };
-      store.put(updated).onsuccess = resolve;
+      store.put(updated).onsuccess = () => resolve();
     };
   });
 }
 
-function getAllLinks() {
+// Đọc dữ liệu gốc từ DB
+function getAllLinksFromDB() {
   return new Promise(resolve => {
     const tx = db.transaction(storeName, 'readonly');
     const store = tx.objectStore(storeName);
@@ -78,10 +86,16 @@ function getAllLinks() {
   });
 }
 
-function deleteLink(id) {
+// Hàm làm mới bộ nhớ đệm nhanh khi dữ liệu thay đổi
+async function refreshCache() {
+  cachedLinks = await getAllLinksFromDB();
+}
+
+async function deleteLink(id) {
   const tx = db.transaction(storeName, 'readwrite');
-  tx.objectStore(storeName).delete(id).onsuccess = () => {
+  tx.objectStore(storeName).delete(id).onsuccess = async () => {
     showStatus("Xóa thành công!");
+    await refreshCache(); // Làm mới cache
     renderLinks();
   };
 }
@@ -94,8 +108,7 @@ function parseTags(tagString) {
 }
 
 async function isUrlDuplicate(url, currentEditingId = null) {
-  const allLinks = await getAllLinks();
-  return allLinks.some(link => {
+  return cachedLinks.some(link => {
     const formatUrl = (u) => u.replace(/\/$/, "").toLowerCase();
     if (currentEditingId && link.id === currentEditingId) {
       return false;
@@ -109,7 +122,6 @@ function toggleSidebar() {
   sidebar.classList.toggle('hidden-sidebar');
 }
 
-// Hàm nén ảnh bằng Canvas giúp giảm dung lượng xuống mức tối thiểu (Dưới 50KB)
 function compressImage(file, maxWidth = 200, maxHeight = 280) {
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -136,8 +148,6 @@ function compressImage(file, maxWidth = 200, maxHeight = 280) {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
-        
-        // Nén ảnh định dạng JPEG chất lượng 70% giúp siêu nhẹ mà vẫn nhìn rõ
         resolve(canvas.toDataURL('image/jpeg', 0.7));
       };
       img.src = e.target.result;
@@ -175,6 +185,7 @@ async function addLink() {
     resetEditState();
     showStatus("Đã cập nhật link!");
     toggleSidebar();
+    await refreshCache(); // Làm mới cache
     renderLinks();
   } else {
     if (imgInput.files.length > 0) {
@@ -184,28 +195,26 @@ async function addLink() {
     clearInputs();
     showStatus(`${type === 'truyen' ? 'Truyện' : 'Video'} đã được lưu!`);
     toggleSidebar();
+    await refreshCache(); // Làm mới cache
     renderLinks();
   }
 }
 
 function editLink(id) {
-  const tx = db.transaction(storeName, 'readonly');
-  const store = tx.objectStore(storeName);
-  store.get(id).onsuccess = e => {
-    const data = e.target.result;
-    document.getElementById('linkTitle').value = data.title;
-    document.getElementById('linkUrl').value = data.url;
-    document.getElementById('linkType').value = data.type;
-    document.getElementById('linkTags').value = data.tags ? data.tags.join(', ') : '';
-    document.getElementById('imageSelectedText').textContent = data.image ? "Đang giữ ảnh cũ" : "";
-    editingId = id;
-    document.getElementById('addOrUpdateBtn').textContent = "Cập nhật";
-    
-    const sidebar = document.getElementById('sidebarForm');
-    sidebar.classList.remove('hidden-sidebar');
-    
-    showStatus("Đang sửa link...");
-  };
+  const target = cachedLinks.find(l => l.id === id);
+  if (!target) return;
+  
+  document.getElementById('linkTitle').value = target.title;
+  document.getElementById('linkUrl').value = target.url;
+  document.getElementById('linkType').value = target.type;
+  document.getElementById('linkTags').value = target.tags ? target.tags.join(', ') : '';
+  document.getElementById('imageSelectedText').textContent = target.image ? "Đang giữ ảnh cũ" : "";
+  editingId = id;
+  document.getElementById('addOrUpdateBtn').textContent = "Cập nhật";
+  
+  const sidebar = document.getElementById('sidebarForm');
+  sidebar.classList.remove('hidden-sidebar');
+  showStatus("Đang sửa link...");
 }
 
 function resetEditState() {
@@ -331,13 +340,17 @@ function renderTagCloud(allLinks) {
   `).join('');
 }
 
+// ĐÃ TỐI ƯU SIÊU TỐC ĐỘ: Đọc trực tiếp từ bộ nhớ RAM (cache) thay vì gọi IndexedDB liên tục
 async function renderLinks() {
-  const allLinks = await getAllLinks();
+  const allLinks = cachedLinks; 
   renderTagCloud(allLinks);
 
   const searchValue = document.getElementById('searchInput').value.trim().toLowerCase();
-  let filteredLinks = allLinks.filter(l => l.title.toLowerCase().includes(searchValue));
-
+  
+  let filteredLinks = allLinks;
+  if (searchValue) {
+    filteredLinks = filteredLinks.filter(l => l.title.toLowerCase().includes(searchValue));
+  }
   if (selectedTag) {
     filteredLinks = filteredLinks.filter(l => l.tags && l.tags.includes(selectedTag));
   }
@@ -518,18 +531,13 @@ function handleTagTouchEnd(e, tag) {
   }
 }
 
-/* ====================================================
-   BỘ ĐÔI HÀM SAO LƯU NHANH BẰNG TEXT (TỐI ƯU SIÊU NHẸ)
-   ==================================================== */
-
 async function copyBackupToClipboard() {
   try {
-    const allLinks = await getAllLinks();
-    if (allLinks.length === 0) {
+    if (cachedLinks.length === 0) {
       showStatus("Lỗi: Không có dữ liệu để copy!");
       return;
     }
-    const exportData = [...allLinks].reverse();
+    const exportData = [...cachedLinks].reverse();
     const jsonString = JSON.stringify(exportData);
     
     const textArea = document.getElementById('backupTextArea');
@@ -589,6 +597,7 @@ async function importBackupFromTextArea() {
 
     showStatus(`Thành công! Đã khôi phục ${importCount} danh mục.`);
     textArea.value = ''; 
+    await refreshCache(); // Đồng bộ lại cache sau khi khôi phục
     renderLinks();
   } catch (err) {
     console.error(err);
