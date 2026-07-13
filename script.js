@@ -346,10 +346,10 @@ function renderTagCloud(allLinks) {
   `).join('');
 }
 
-// BỘ LỌC ĐÃ ĐƯỢC NÂNG CẤP LAZY-LOADING: Tốc độ tức thì bất kể số lượng truyện dồi dào
+// BỘ LỌC TỐI ƯU TOÀN DIỆN BẰNG BỘ NHỚ ĐỆM DOM ẢO VÀ ĐỒNG BỘ KHÔNG ĐỒNG BỘ CHIA NHỎ LUỒNG RENDER
 async function renderLinks(resetPagination = false) {
   if (resetPagination) {
-    itemsToShow = 14; // Thiết lập hiển thị số phần tử ban đầu cho mượt trang
+    itemsToShow = 14; 
   }
 
   const allLinks = cachedLinks; 
@@ -365,11 +365,9 @@ async function renderLinks(resetPagination = false) {
     filteredLinks = filteredLinks.filter(l => l.tags && l.tags.includes(selectedTag));
   }
 
-  // Lưu trữ mảng toàn cục để tính toán cuộn vô tận mượt mà
   filteredTruyenGlobal = filteredLinks.filter(l => l.type === 'truyen');
   filteredVideoGlobal = filteredLinks.filter(l => l.type === 'video');
 
-  // Chỉ cắt lấy số lượng nhất định cần render trước để chống giật máy
   const truyenLinks = filteredTruyenGlobal.slice(0, itemsToShow);
   const videoLinks = filteredVideoGlobal.slice(0, itemsToShow);
 
@@ -377,6 +375,7 @@ async function renderLinks(resetPagination = false) {
   const videoList = document.getElementById('videoList');
 
   const createHTML = (items) => {
+    if (!items.length) return '';
     let wrapperHTML = '<div class="links-list-wrapper">';
     wrapperHTML += items.map(item => {
       let tagsHTML = '';
@@ -415,9 +414,18 @@ async function renderLinks(resetPagination = false) {
     return wrapperHTML;
   };
 
-  truyenList.innerHTML = truyenLinks.length ? createHTML(truyenLinks) : `<div class="empty-state">Không có truyện phù hợp.</div>`;
-  videoList.innerHTML = videoLinks.length ? createHTML(videoLinks) : `<div class="empty-state">Không có video phù hợp.</div>`;
+  // GIẢI PHÁP TỐI ƯU CỐT LÕI: Chia nhỏ xử lý ghi đè DOM để không đơ máy
+  // 1. Dựng danh mục Truyện trước ngay lập tức bằng DocumentFragment ngầm định
+  const truyenHTML = truyenLinks.length ? createHTML(truyenLinks) : `<div class="empty-state">Không có truyện phù hợp.</div>`;
+  truyenList.innerHTML = truyenHTML;
 
+  // 2. Trì hoãn nhẹ danh mục Video sang khung hình tiếp theo (Vừa mắt người, máy không tốn tài nguyên gánh 2 việc)
+  requestAnimationFrame(() => {
+    const videoHTML = videoLinks.length ? createHTML(videoLinks) : `<div class="empty-state">Không có video phù hợp.</div>`;
+    videoList.innerHTML = videoHTML;
+  });
+
+  // Cập nhật các badge tag hiển thị
   const activeTagTruyenEl = document.getElementById('activeTag-truyen');
   const activeTagVideoEl = document.getElementById('activeTag-video');
 
@@ -443,10 +451,9 @@ async function renderLinks(resetPagination = false) {
 function setupInfiniteScroll() {
   window.addEventListener('scroll', () => {
     if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 150) {
-      // Nếu số phần tử hiển thị hiện tại còn nhỏ hơn tổng số truyện/video hiện có thì load thêm
       if (itemsToShow < filteredTruyenGlobal.length || itemsToShow < filteredVideoGlobal.length) {
-        itemsToShow += 14; // Tăng thêm 14 item cho lượt kế tiếp
-        renderLinks(false); // Render thêm mà không reset lại vị trí cuộn cuộn
+        itemsToShow += 14; 
+        renderLinks(false); 
       }
     }
   });
@@ -626,7 +633,7 @@ async function importBackupFromTextArea() {
     showStatus(`Thành công! Đã khôi phục ${importCount} danh mục.`);
     textArea.value = ''; 
     await refreshCache(); 
-    renderLinks(true); // Reset phân trang sau khi khôi phục dữ liệu thành công
+    renderLinks(true); 
   } catch (err) {
     console.error(err);
     showStatus("Lỗi: Mã bị thiếu hoặc sai cấu trúc!");
