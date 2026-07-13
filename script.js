@@ -518,7 +518,7 @@ function handleTagTouchEnd(e, tag) {
     targetEl.style.opacity = '1';
   }
 }
-// 1. Hàm xuất toàn bộ dữ liệu thành file JSON để tải về máy
+// Hàm xuất toàn bộ dữ liệu - Tự động chuyển đổi sang đuôi .txt để tránh bị Android chặn
 async function exportBackupData() {
   const allLinks = await getAllLinks();
   if (allLinks.length === 0) {
@@ -526,14 +526,19 @@ async function exportBackupData() {
     return;
   }
   
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allLinks));
+  // Chuyển dữ liệu JSON thành chuỗi văn bản thuần túy
+  const dataStr = "data:text/plain;charset=utf-8," + encodeURIComponent(JSON.stringify(allLinks));
+  
   const downloadAnchor = document.createElement('a');
   downloadAnchor.setAttribute("href", dataStr);
-  downloadAnchor.setAttribute("download", "quan_ly_links_backup.json");
+  
+  // ĐỔI TẠI ĐÂY: Thay vì .json, chúng ta đặt đuôi là .txt luôn
+  downloadAnchor.setAttribute("download", "quan_ly_links_backup.txt");
+  
   document.body.appendChild(downloadAnchor);
   downloadAnchor.click();
   downloadAnchor.remove();
-  showStatus("Đã xuất file sao lưu thành công!");
+  showStatus("Đã xuất file sao lưu (.txt) thành công!");
 }
 
 // 2. Hàm nhập dữ liệu từ file JSON vào trình duyệt mới
