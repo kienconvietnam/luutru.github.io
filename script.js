@@ -518,7 +518,7 @@ function handleTagTouchEnd(e, tag) {
     targetEl.style.opacity = '1';
   }
 }
-// Hàm xuất toàn bộ dữ liệu - Tự động chuyển đổi sang đuôi .txt để tránh bị Android chặn
+// Hàm xuất file sao lưu tối ưu 100% cho cả Mobile và PC
 async function exportBackupData() {
   const allLinks = await getAllLinks();
   if (allLinks.length === 0) {
@@ -526,21 +526,38 @@ async function exportBackupData() {
     return;
   }
   
-  // Chuyển dữ liệu JSON thành chuỗi văn bản thuần túy
-  const dataStr = "data:text/plain;charset=utf-8," + encodeURIComponent(JSON.stringify(allLinks));
-  
-  const downloadAnchor = document.createElement('a');
-  downloadAnchor.setAttribute("href", dataStr);
-  
-  // ĐỔI TẠI ĐÂY: Thay vì .json, chúng ta đặt đuôi là .txt luôn
-  downloadAnchor.setAttribute("download", "quan_ly_links_backup.txt");
-  
-  document.body.appendChild(downloadAnchor);
-  downloadAnchor.click();
-  downloadAnchor.remove();
-  showStatus("Đã xuất file sao lưu (.txt) thành công!");
-}
+  // 1. Chuyển dữ liệu JSON thành chuỗi văn bản định dạng chuẩn
+  const jsonString = JSON.stringify(allLinks, null, 2);
 
+  try {
+    // 2. Tạo một Blob với kiểu dữ liệu là văn bản thuần túy (text/plain)
+    // Dùng đuôi .txt giúp mobile không bị nhận diện nhầm là file hệ thống nguy hiểm
+    const blob = new Blob([jsonString], { type: "text/plain;charset=utf-8" });
+    
+    // 3. Tạo đường dẫn tải về ảo từ Blob
+    const blobUrl = URL.createObjectURL(blob);
+    
+    // 4. Tạo thẻ <a> ẩn để kích hoạt trình quản lý tải về của điện thoại
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.href = blobUrl;
+    downloadAnchor.download = "quan_ly_links_backup.txt"; // Tên file gợi ý mặc định
+    
+    // Gắn vào body, kích hoạt click rồi xóa luôn để tránh rác DOM
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    
+    // Thu hồi đường dẫn ảo để giải phóng bộ nhớ RAM của điện thoại
+    setTimeout(() => {
+      document.body.removeChild(downloadAnchor);
+      URL.revokeObjectURL(blobUrl);
+    }, 100);
+
+    showStatus("Đang tải file (.txt) về máy...");
+  } catch (err) {
+    console.error(err);
+    showStatus("Lỗi: Không thể xuất file trên thiết bị này!");
+  }
+}
 // 2. Hàm nhập dữ liệu từ file JSON vào trình duyệt mới
 function importBackupData(event) {
   const file = event.target.files[0];
