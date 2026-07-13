@@ -252,27 +252,22 @@ function selectSuggestTag(tag) {
 
 function setupClickOutside() {
   document.addEventListener('click', (e) => {
-    // 1. Xử lý click ra ngoài để ẩn gợi ý tag (giữ nguyên logic cũ)
     const container = document.querySelector('.tag-input-container');
     if (container && !container.contains(e.target)) {
       document.getElementById('tagSuggestionBox').classList.add('hidden');
     }
 
-    // 2. XỬ LÝ MỚI: Click ra ngoài để đóng Sidebar Nhập Thông Tin
     const sidebar = document.getElementById('sidebarForm');
     const menuToggleBtn = document.querySelector('.menu-toggle-btn');
     
-    // Nếu Sidebar ĐANG MỞ (không chứa class hidden-sidebar)
     if (sidebar && !sidebar.classList.contains('hidden-sidebar')) {
-      // Kiểm tra xem vị trí click có nằm NGOÀI sidebar và NGOÀI nút mở rộng không
       if (!sidebar.contains(e.target) && !menuToggleBtn.contains(e.target)) {
-        sidebar.classList.add('hidden-sidebar'); // Đóng sidebar lại
+        sidebar.classList.add('hidden-sidebar'); 
       }
     }
   });
 }
 
-// Thêm một biến cờ để tránh render Tag Cloud không cần thiết
 let lastUniqueTagsStr = "";
 
 function renderTagCloud(allLinks) {
@@ -291,7 +286,6 @@ function renderTagCloud(allLinks) {
   const uniqueTags = Object.keys(tagCounts).sort();
   const currentTagsStr = uniqueTags.join(',') + `-${selectedTag}-${allLinks.length}`;
   
-  // TỐI ƯU: Nếu danh sách tag không đổi, KHÔNG dựng lại HTML để tránh lag mobile
   if (currentTagsStr === lastUniqueTagsStr) return;
   lastUniqueTagsStr = currentTagsStr;
 
@@ -322,7 +316,6 @@ function renderTagCloud(allLinks) {
 async function renderLinks() {
   const allLinks = await getAllLinks();
   
-  // Render đám mây thẻ (Đã được tối ưu ở trên)
   renderTagCloud(allLinks);
 
   const searchValue = document.getElementById('searchInput').value.trim().toLowerCase();
@@ -380,12 +373,10 @@ async function renderLinks() {
   truyenList.innerHTML = truyenLinks.length ? createHTML(truyenLinks) : `<div class="empty-state">Không có truyện phù hợp.</div>`;
   videoList.innerHTML = videoLinks.length ? createHTML(videoLinks) : `<div class="empty-state">Không có video phù hợp.</div>`;
 
- // TÌM ĐOẠN NÀY Ở CUỐI HÀM renderLinks() VÀ THAY THẾ
   const activeTagTruyenEl = document.getElementById('activeTag-truyen');
   const activeTagVideoEl = document.getElementById('activeTag-video');
 
   if (selectedTag) {
-    // Tạo cấu trúc thẻ hỗ trợ cả click (cho PC) và vuốt (cho Mobile)
     const tagBadgeHTML = `
       <span class="selected-badge-tag active-swipe-tag" 
             onclick="filterByTag('${selectedTag}')"
@@ -469,29 +460,23 @@ function markAsViewed(id) {
     titleEl.style.color = '#bbb';
   }
 }
-// Biến lưu vị trí ngón tay khi bắt đầu chạm
+
 let touchStartY = 0;
 let touchStartX = 0;
 
 function handleTagTouchStart(e) {
-  // Lưu vị trí chạm ban đầu
   touchStartY = e.touches[0].clientY;
   touchStartX = e.touches[0].clientX;
-  e.currentTarget.style.transition = 'none'; // Tắt hiệu ứng mượt tạm thời khi đang vuốt
+  e.currentTarget.style.transition = 'none'; 
 }
 
 function handleTagTouchMove(e) {
   const currentY = e.touches[0].clientY;
   const deltaY = currentY - touchStartY;
 
-  // Chỉ xử lý nếu người dùng đang vuốt LÊN (deltaY số âm)
   if (deltaY < 0) {
-    // Ngăn cuộn trang web khi đang vuốt tag
     e.preventDefault(); 
-    
-    // Di chuyển cái tag đi lên theo ngón tay một chút để tạo cảm giác thực tế
     e.currentTarget.style.transform = `translate3d(0, ${deltaY}px, 0)`;
-    // Làm mờ dần tag khi vuốt lên cao
     e.currentTarget.style.opacity = Math.max(0, 1 + deltaY / 60); 
   }
 }
@@ -501,124 +486,17 @@ function handleTagTouchEnd(e, tag) {
   const deltaY = touchEndY - touchStartY;
   const targetEl = e.currentTarget;
 
-  // Nếu vuốt lên một khoảng hơn 35px thì kích hoạt xóa tag
   if (deltaY < -35) {
     targetEl.style.transition = 'all 0.2s ease';
-    targetEl.style.transform = 'translate3d(0, -80px, 0)'; // Bay lên hẳn
+    targetEl.style.transform = 'translate3d(0, -80px, 0)'; 
     targetEl.style.opacity = '0';
     
-    // Đợi hiệu ứng bay lên hoàn thành rồi thực hiện xóa lọc
     setTimeout(() => {
       filterByTag(tag);
-    }, 200020 - 200000); // ~200ms
+    }, 20); 
   } else {
-    // Nếu vuốt chưa đủ độ cao, trả tag về vị trí cũ mượt mà
     targetEl.style.transition = 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
     targetEl.style.transform = 'translate3d(0, 0, 0)';
     targetEl.style.opacity = '1';
-  }
-}
-// Hàm xuất file sao lưu kích hoạt trực tiếp trình quản lý tệp trên Mobile
-async function exportBackupData() {
-  const allLinks = await getAllLinks();
-  if (allLinks.length === 0) {
-    showStatus("Không có dữ liệu để xuất!");
-    return;
-  }
-  
-  // 1. Chuyển dữ liệu JSON thành chuỗi văn bản định dạng đẹp
-  const jsonString = JSON.stringify(allLinks, null, 2);
-
-  try {
-    // 2. Khởi tạo một đối tượng File thực tế (không chỉ là Blob)
-    // Đặt tên file mặc định có đuôi .txt để dễ quản lý trên điện thoại
-    const file = new File([jsonString], "quan_ly_links_backup.txt", {
-      type: "text/plain",
-    });
-
-    // 3. Kiểm tra xem trình duyệt di động có hỗ trợ chia sẻ tệp trực tiếp không
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({
-        files: [file],
-        title: "Sao lưu dữ liệu",
-        text: "Tệp sao lưu ứng dụng Quản lý Truyện & Video",
-      });
-      showStatus("Đã mở bảng chọn nơi lưu!");
-    } else {
-      // Phương thức dự phòng (Fallback) nếu trình duyệt cũ không hỗ trợ Web Share API
-      const blob = new Blob([jsonString], { type: "text/plain;charset=utf-8" });
-      const blobUrl = URL.createObjectURL(blob);
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.href = blobUrl;
-      downloadAnchor.download = "quan_ly_links_backup.txt";
-      
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      
-      setTimeout(() => {
-        document.body.removeChild(downloadAnchor);
-        URL.revokeObjectURL(blobUrl);
-      }, 100);
-      showStatus("Trình duyệt không hỗ trợ chia sẻ, tự động tải xuống!");
-    }
-  } catch (err) {
-    // Không hiện thông báo lỗi nếu người dùng chủ động tắt bảng chia sẻ (AbortError)
-    if (err.name !== 'AbortError') {
-      console.error(err);
-      showStatus("Lỗi khi xuất dữ liệu!");
-    }
-  }
-}
-
-// Hàm xuất file sao lưu kết hợp tự sao chép dữ liệu để chống lỗi trình duyệt Zalo
-async function exportBackupData() {
-  const allLinks = await getAllLinks();
-  if (allLinks.length === 0) {
-    showStatus("Không có dữ liệu để xuất!");
-    return;
-  }
-  
-  const jsonString = JSON.stringify(allLinks, null, 2);
-
-  // Tự động sao chép dữ liệu vào Clipboard trước để dự phòng
-  try {
-    await navigator.clipboard.writeText(jsonString);
-    showStatus("Đã sao chép dữ liệu sao lưu vào bộ nhớ tạm!");
-  } catch (err) {
-    console.log("Không thể tự động sao chép");
-  }
-
-  try {
-    const file = new File([jsonString], "quan_ly_links_backup.txt", {
-      type: "text/plain",
-    });
-
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({
-        files: [file],
-        title: "Sao lưu dữ liệu",
-        text: "Tệp sao lưu ứng dụng Quản lý Truyện & Video",
-      });
-    } else {
-      const blob = new Blob([jsonString], { type: "text/plain;charset=utf-8" });
-      const blobUrl = URL.createObjectURL(blob);
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.href = blobUrl;
-      downloadAnchor.download = "quan_ly_links_backup.txt";
-      
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      
-      setTimeout(() => {
-        document.body.removeChild(downloadAnchor);
-        URL.revokeObjectURL(blobUrl);
-      }, 100);
-    }
-  } catch (err) {
-    if (err.name !== 'AbortError') {
-      console.error(err);
-      // Nếu các phương pháp tải file đều thất bại (như trên Zalo), báo cho người dùng dán dữ liệu ra ghi chú
-      alert("Trình duyệt hạn chế tải file! Dữ liệu khôi phục ĐÃ ĐƯỢC SAO CHÉP, vui lòng mở ứng dụng Ghi chú hoặc tin nhắn và nhấn 'Dán' (Paste) để lưu lại nhé!");
-    }
   }
 }
