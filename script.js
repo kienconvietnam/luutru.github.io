@@ -8,6 +8,11 @@ let selectedTag = null;
 // Biến lưu cache danh sách để không phải đọc lại IndexedDB liên tục
 let cachedLinks = []; 
 
+// CẤP THỊ CHO LAZY RENDER (Giúp tải trang và xóa tag siêu nhanh)
+let itemsToShow = 14; // Số lượng hiển thị mặc định ban đầu
+let filteredTruyenGlobal = [];
+let filteredVideoGlobal = [];
+
 window.onload = async () => {
   await initDB();
   await migrateFromLocalStorage();
@@ -15,10 +20,11 @@ window.onload = async () => {
   
   // Tải dữ liệu lần đầu tiên và lưu vào bộ nhớ đệm cache
   cachedLinks = await getAllLinksFromDB();
-  renderLinks();
+  renderLinks(true); // reset phân trang khi tải trang lần đầu
   
   setupImageSelectionText();
   setupClickOutside(); 
+  setupInfiniteScroll(); // Kích hoạt tính năng cuộn đến đâu load đến đó
 
   const allInputsOnPage = document.querySelectorAll('input');
   allInputsOnPage.forEach(input => {
@@ -96,7 +102,7 @@ async function deleteLink(id) {
   tx.objectStore(storeName).delete(id).onsuccess = async () => {
     showStatus("Xóa thành công!");
     await refreshCache(); // Làm mới cache
-    renderLinks();
+    renderLinks(false);
   };
 }
 
@@ -186,7 +192,7 @@ async function addLink() {
     showStatus("Đã cập nhật link!");
     toggleSidebar();
     await refreshCache(); // Làm mới cache
-    renderLinks();
+    renderLinks(false);
   } else {
     if (imgInput.files.length > 0) {
       image = await compressImage(imgInput.files[0]);
@@ -196,7 +202,7 @@ async function addLink() {
     showStatus(`${type === 'truyen' ? 'Truyện' : 'Video'} đã được lưu!`);
     toggleSidebar();
     await refreshCache(); // Làm mới cache
-    renderLinks();
+    renderLinks(true); // Thêm mới thì cuộn lên đầu và reset phân trang
   }
 }
 
@@ -245,7 +251,7 @@ function filterByTag(tag) {
     const tagContainer = document.getElementById('tagContainer');
     if (tagContainer) tagContainer.classList.add('hidden');
   }
-  renderLinks();
+  renderLinks(true); // Reset phân trang khi đổi tag để lên mượt nhất
 }
 
 function toggleTagCloud() {
@@ -340,8 +346,12 @@ function renderTagCloud(allLinks) {
   `).join('');
 }
 
-// ĐÃ TỐI ƯU SIÊU TỐC ĐỘ: Đọc trực tiếp từ bộ nhớ RAM (cache) thay vì gọi IndexedDB liên tục
-async function renderLinks() {
+// BỘ LỌC ĐÃ ĐƯỢC NÂNG CẤP LAZY-LOADING: Tốc độ tức thì bất kể số lượng truyện dồi dào
+async function renderLinks(resetPagination = false) {
+  if (resetPagination) {
+    itemsToShow = 14; // Thiết lập hiển thị số phần tử ban đầu cho mượt trang
+  }
+
   const allLinks = cachedLinks; 
   renderTagCloud(allLinks);
 
@@ -355,8 +365,13 @@ async function renderLinks() {
     filteredLinks = filteredLinks.filter(l => l.tags && l.tags.includes(selectedTag));
   }
 
-  const truyenLinks = filteredLinks.filter(l => l.type === 'truyen');
-  const videoLinks = filteredLinks.filter(l => l.type === 'video');
+  // Lưu trữ mảng toàn cục để tính toán cuộn vô tận mượt mà
+  filteredTruyenGlobal = filteredLinks.filter(l => l.type === 'truyen');
+  filteredVideoGlobal = filteredLinks.filter(l => l.type === 'video');
+
+  // Chỉ cắt lấy số lượng nhất định cần render trước để chống giật máy
+  const truyenLinks = filteredTruyenGlobal.slice(0, itemsToShow);
+  const videoLinks = filteredVideoGlobal.slice(0, itemsToShow);
 
   const truyenList = document.getElementById('truyenList');
   const videoList = document.getElementById('videoList');
@@ -422,6 +437,19 @@ async function renderLinks() {
     activeTagTruyenEl.innerHTML = '';
     activeTagVideoEl.innerHTML = '';
   }
+}
+
+// HÀM THEO DÕI CUỘN MÀN HÌNH ĐỂ TỰ ĐỘNG LOAD THÊM TRUYỆN/VIDEO KHÔNG GÂY ĐƠ MÁY
+function setupInfiniteScroll() {
+  window.addEventListener('scroll', () => {
+    if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 150) {
+      // Nếu số phần tử hiển thị hiện tại còn nhỏ hơn tổng số truyện/video hiện có thì load thêm
+      if (itemsToShow < filteredTruyenGlobal.length || itemsToShow < filteredVideoGlobal.length) {
+        itemsToShow += 14; // Tăng thêm 14 item cho lượt kế tiếp
+        renderLinks(false); // Render thêm mà không reset lại vị trí cuộn cuộn
+      }
+    }
+  });
 }
 
 function toggleSection(type) {
@@ -597,8 +625,8 @@ async function importBackupFromTextArea() {
 
     showStatus(`Thành công! Đã khôi phục ${importCount} danh mục.`);
     textArea.value = ''; 
-    await refreshCache(); // Đồng bộ lại cache sau khi khôi phục
-    renderLinks();
+    await refreshCache(); 
+    renderLinks(true); // Reset phân trang sau khi khôi phục dữ liệu thành công
   } catch (err) {
     console.error(err);
     showStatus("Lỗi: Mã bị thiếu hoặc sai cấu trúc!");
