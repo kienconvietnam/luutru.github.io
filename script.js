@@ -109,6 +109,43 @@ function toggleSidebar() {
   sidebar.classList.toggle('hidden-sidebar');
 }
 
+// Hàm nén ảnh bằng Canvas giúp giảm dung lượng xuống mức tối thiểu (Dưới 50KB)
+function compressImage(file, maxWidth = 200, maxHeight = 280) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height *= maxWidth / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width *= maxHeight / height;
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Nén ảnh định dạng JPEG chất lượng 70% giúp siêu nhẹ mà vẫn nhìn rõ
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 async function addLink() {
   const title = document.getElementById('linkTitle').value.trim();
   const url = document.getElementById('linkUrl').value.trim();
@@ -129,43 +166,25 @@ async function addLink() {
   }
 
   if (editingId) {
-    const reader = new FileReader();
     if (imgInput.files.length > 0) {
-      reader.onload = async () => {
-        image = reader.result;
-        await updateDB(editingId, { title, url, type, tags, image });
-        resetEditState();
-        showStatus("Đã cập nhật link!");
-        toggleSidebar();
-        renderLinks();
-      };
-      reader.readAsDataURL(imgInput.files[0]);
+      image = await compressImage(imgInput.files[0]);
+      await updateDB(editingId, { title, url, type, tags, image });
     } else {
       await updateDB(editingId, { title, url, type, tags });
-      resetEditState();
-      showStatus("Đã cập nhật link!");
-      toggleSidebar();
-      renderLinks();
     }
+    resetEditState();
+    showStatus("Đã cập nhật link!");
+    toggleSidebar();
+    renderLinks();
   } else {
     if (imgInput.files.length > 0) {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        image = reader.result;
-        await addToDB({ title, url, type, tags, image });
-        clearInputs();
-        showStatus(`${type === 'truyen' ? 'Truyện' : 'Video'} đã được lưu!`);
-        toggleSidebar();
-        renderLinks();
-      };
-      reader.readAsDataURL(imgInput.files[0]);
-    } else {
-      await addToDB({ title, url, type, tags, image });
-      clearInputs();
-      showStatus(`${type === 'truyen' ? 'Truyện' : 'Video'} đã được lưu!`);
-      toggleSidebar();
-      renderLinks();
+      image = await compressImage(imgInput.files[0]);
     }
+    await addToDB({ title, url, type, tags, image });
+    clearInputs();
+    showStatus(`${type === 'truyen' ? 'Truyện' : 'Video'} đã được lưu!`);
+    toggleSidebar();
+    renderLinks();
   }
 }
 
@@ -427,7 +446,7 @@ function restoreCollapsedState() {
 function setupImageSelectionText() {
   const imgInput = document.getElementById('linkImage');
   const text = document.getElementById('imageSelectedText');
-  imgInput.addEventListener('change', () => {
+  imgInput.addEventListener('change', async () => {
     if (imgInput.files.length > 0) {  
       text.textContent = 'Đã chọn ảnh thành công!';
     } else {
@@ -500,10 +519,9 @@ function handleTagTouchEnd(e, tag) {
 }
 
 /* ====================================================
-   BỘ ĐÔI HÀM SAO LƯU NHANH BẰNG TEXT (ĐÃ SỬA LỖI ZALO CHẶN)
+   BỘ ĐÔI HÀM SAO LƯU NHANH BẰNG TEXT (TỐI ƯU SIÊU NHẸ)
    ==================================================== */
 
-// Hàm chạy bên Zalo: Lấy dữ liệu và nhồi trực tiếp vào ô để copy tay nếu bị chặn
 async function copyBackupToClipboard() {
   try {
     const allLinks = await getAllLinks();
@@ -514,14 +532,12 @@ async function copyBackupToClipboard() {
     const exportData = [...allLinks].reverse();
     const jsonString = JSON.stringify(exportData);
     
-    // Đẩy thẳng chuỗi dữ liệu vào ô Textarea để người dùng tự copy thủ công
     const textArea = document.getElementById('backupTextArea');
     if (textArea) {
       textArea.value = jsonString;
-      textArea.select(); // Bôi đen toàn bộ chuỗi chữ
+      textArea.select(); 
     }
 
-    // Vẫn cố thử kích hoạt lệnh sao chép tự động
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(jsonString);
@@ -536,7 +552,6 @@ async function copyBackupToClipboard() {
         showStatus("Đã tự copy và hiển thị mã ở ô dưới!");
       }
     } catch (e) {
-      // Thông báo khi bị Zalo chặn ngầm
       showStatus("Zalo chặn tự động! Hãy copy tay đoạn mã ở ô dưới.");
     }
   } catch (err) {
@@ -545,7 +560,6 @@ async function copyBackupToClipboard() {
   }
 }
 
-// Hàm chạy bên Chrome: Đọc chuỗi văn bản vừa dán vào để khôi phục dữ liệu truyện/video
 async function importBackupFromTextArea() {
   const textArea = document.getElementById('backupTextArea');
   if (!textArea) return;
