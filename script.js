@@ -518,7 +518,7 @@ function handleTagTouchEnd(e, tag) {
     targetEl.style.opacity = '1';
   }
 }
-// Hàm xuất file sao lưu tối ưu 100% cho cả Mobile và PC
+// Hàm xuất file sao lưu kích hoạt trực tiếp trình quản lý tệp trên Mobile
 async function exportBackupData() {
   const allLinks = await getAllLinks();
   if (allLinks.length === 0) {
@@ -526,36 +526,47 @@ async function exportBackupData() {
     return;
   }
   
-  // 1. Chuyển dữ liệu JSON thành chuỗi văn bản định dạng chuẩn
+  // 1. Chuyển dữ liệu JSON thành chuỗi văn bản định dạng đẹp
   const jsonString = JSON.stringify(allLinks, null, 2);
 
   try {
-    // 2. Tạo một Blob với kiểu dữ liệu là văn bản thuần túy (text/plain)
-    // Dùng đuôi .txt giúp mobile không bị nhận diện nhầm là file hệ thống nguy hiểm
-    const blob = new Blob([jsonString], { type: "text/plain;charset=utf-8" });
-    
-    // 3. Tạo đường dẫn tải về ảo từ Blob
-    const blobUrl = URL.createObjectURL(blob);
-    
-    // 4. Tạo thẻ <a> ẩn để kích hoạt trình quản lý tải về của điện thoại
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.href = blobUrl;
-    downloadAnchor.download = "quan_ly_links_backup.txt"; // Tên file gợi ý mặc định
-    
-    // Gắn vào body, kích hoạt click rồi xóa luôn để tránh rác DOM
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    
-    // Thu hồi đường dẫn ảo để giải phóng bộ nhớ RAM của điện thoại
-    setTimeout(() => {
-      document.body.removeChild(downloadAnchor);
-      URL.revokeObjectURL(blobUrl);
-    }, 100);
+    // 2. Khởi tạo một đối tượng File thực tế (không chỉ là Blob)
+    // Đặt tên file mặc định có đuôi .txt để dễ quản lý trên điện thoại
+    const file = new File([jsonString], "quan_ly_links_backup.txt", {
+      type: "text/plain",
+    });
 
-    showStatus("Đang tải file (.txt) về máy...");
+    // 3. Kiểm tra xem trình duyệt di động có hỗ trợ chia sẻ tệp trực tiếp không
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        files: [file],
+        title: "Sao lưu dữ liệu",
+        text: "Tệp sao lưu ứng dụng Quản lý Truyện & Video",
+      });
+      showStatus("Đã mở bảng chọn nơi lưu!");
+    } else {
+      // Phương thức dự phòng (Fallback) nếu trình duyệt cũ không hỗ trợ Web Share API
+      const blob = new Blob([jsonString], { type: "text/plain;charset=utf-8" });
+      const blobUrl = URL.createObjectURL(blob);
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.href = blobUrl;
+      downloadAnchor.download = "quan_ly_links_backup.txt";
+      
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      
+      setTimeout(() => {
+        document.body.removeChild(downloadAnchor);
+        URL.revokeObjectURL(blobUrl);
+      }, 100);
+      showStatus("Trình duyệt không hỗ trợ chia sẻ, tự động tải xuống!");
+    }
   } catch (err) {
-    console.error(err);
-    showStatus("Lỗi: Không thể xuất file trên thiết bị này!");
+    // Không hiện thông báo lỗi nếu người dùng chủ động tắt bảng chia sẻ (AbortError)
+    if (err.name !== 'AbortError') {
+      console.error(err);
+      showStatus("Lỗi khi xuất dữ liệu!");
+    }
   }
 }
 // 2. Hàm nhập dữ liệu từ file JSON vào trình duyệt mới
