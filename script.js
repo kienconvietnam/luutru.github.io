@@ -26,19 +26,6 @@ window.onload = async () => {
   setupClickOutside(); 
   setupInfiniteScroll(); // Kích hoạt tính năng cuộn đến đâu load đến đó
 
-  // === TỰ ĐỘNG CUỘN VỀ VỊ TRÍ CŨ KHI QUAY LẠI ===
-  const savedScrollTop = sessionStorage.getItem('lastScrollPosition');
-  if (savedScrollTop) {
-    // Chờ một nhịp nhỏ để DOM và ảnh kịp hiển thị rồi cuộn
-    setTimeout(() => {
-      window.scrollTo({
-        top: parseInt(savedScrollTop, 10),
-        behavior: 'instant' // Cuộn ngay lập tức không gây giật màn hình
-      });
-      sessionStorage.removeItem('lastScrollPosition'); // Cuộn xong thì xóa đi cho sạch
-    }, 100);
-  }
-
   const allInputsOnPage = document.querySelectorAll('input');
   allInputsOnPage.forEach(input => {
     input.addEventListener('keydown', (e) => {
@@ -140,6 +127,8 @@ function toggleSidebar() {
   const sidebar = document.getElementById('sidebarForm');
   sidebar.classList.toggle('hidden-sidebar');
 }
+
+document.getElementById('addOrUpdateBtn');
 
 function compressImage(file, maxWidth = 200, maxHeight = 280) {
   return new Promise((resolve) => {
@@ -550,9 +539,6 @@ function showStatus(message) {
 }
 
 function markAsViewed(id) {
-  // Ghi nhớ vị trí cuộn hiện tại trước khi chuyển trang
-  sessionStorage.setItem('lastScrollPosition', window.scrollY);
-
   const titleEl = document.getElementById(`title-${id}`);
   if (titleEl) {
     titleEl.style.color = '#bbb';
@@ -596,79 +582,5 @@ function handleTagTouchEnd(e, tag) {
     targetEl.style.transition = 'all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
     targetEl.style.transform = 'translate3d(0, 0, 0)';
     targetEl.style.opacity = '1';
-  }
-}
-
-async function copyBackupToClipboard() {
-  try {
-    if (cachedLinks.length === 0) {
-      showStatus("Lỗi: Không có dữ liệu để copy!");
-      return;
-    }
-    const exportData = [...cachedLinks].reverse();
-    const jsonString = JSON.stringify(exportData);
-    
-    const textArea = document.getElementById('backupTextArea');
-    if (textArea) {
-      textArea.value = jsonString;
-      textArea.select(); 
-    }
-
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(jsonString);
-        showStatus("Đã tự copy và hiển thị mã ở ô dưới!");
-      } else {
-        const tempInput = document.createElement("textarea");
-        tempInput.value = jsonString;
-        document.body.appendChild(tempInput);
-        tempInput.select();
-        document.execCommand("copy");
-        document.body.removeChild(tempInput);
-        showStatus("Đã tự copy và hiển thị mã ở ô dưới!");
-      }
-    } catch (e) {
-      showStatus("Zalo chặn tự động! Hãy copy tay đoạn mã ở ô dưới.");
-    }
-  } catch (err) {
-    console.error(err);
-    showStatus("Lỗi: Không thể xuất dữ liệu!");
-  }
-}
-
-async function importBackupFromTextArea() {
-  const textArea = document.getElementById('backupTextArea');
-  if (!textArea) return;
-  
-  const textData = textArea.value.trim();
-  if (!textData) {
-    showStatus("Vui lòng dán mã dữ liệu vào ô trống!");
-    return;
-  }
-
-  try {
-    const importedData = JSON.parse(textData);
-    if (!Array.isArray(importedData)) {
-      showStatus("Lỗi: Mã dữ liệu không đúng cấu trúc!");
-      return;
-    }
-
-    let importCount = 0;
-    for (const item of importedData) {
-      const isDuplicate = await isUrlDuplicate(item.url);
-      if (!isDuplicate) {
-        const { id, ...cleanItem } = item; 
-        await addToDB(cleanItem);
-        importCount++;
-      }
-    }
-
-    showStatus(`Thành công! Đã khôi phục ${importCount} danh mục.`);
-    textArea.value = ''; 
-    await refreshCache(); 
-    renderLinks(true); 
-  } catch (err) {
-    console.error(err);
-    showStatus("Lỗi: Mã bị thiếu hoặc sai cấu trúc!");
   }
 }

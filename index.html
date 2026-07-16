@@ -43,59 +43,6 @@
         <button id="addOrUpdateBtn" onclick="addLink()">Thêm Link</button>
       </div>
     </div>
-
-    <!-- KHU VỰC SAO LƯU NHANH BẰNG TEXT TỐI ƯU CHO MOBILE (ZALO -> CHROME) -->
-    <div class="backup-section" style="margin-top: 30px; border-top: 2px dashed #eaeef3; padding-top: 20px;">
-      <h3 style="font-size: 1.1em; color: #1f4068; margin-bottom: 15px; text-align: center;">⚡ Sao lưu nhanh (Dành cho Zalo)</h3>
-      
-      <div style="display: flex; flex-direction: column; gap: 12px;">
-        <!-- Nút chạy bên Zalo -->
-        <button type="button" onclick="copyBackupToClipboard()" style="
-          background: linear-gradient(135deg, #2196F3 0%, #1e88e5 100%); 
-          padding: 13px; 
-          font-size: 0.95rem; 
-          border-radius: 8px; 
-          font-weight: bold; 
-          color: white;
-          border: none;
-          box-shadow: 0 3px 6px rgba(33,150,243,0.3);
-        ">
-          📋 1. Bấm để Copy dữ liệu (Dùng bên Zalo)
-        </button>
-        
-        <!-- Khung xử lý chạy bên Chrome -->
-        <div style="border-top: 1px solid #edf2f7; margin-top: 5px; padding-top: 12px;">
-          <label style="font-size: 0.9em; color: #4a5568; display: block; margin-bottom: 6px; font-weight: 500;">Dán mã vào đây (Dùng bên Chrome):</label>
-          <textarea id="backupTextArea" placeholder="Ấn giữ vào đây rồi chọn Dán (Paste)..." style="
-            width: 100%; 
-            height: 90px; 
-            padding: 10px; 
-            border-radius: 8px; 
-            border: 1px solid #cbd5e0; 
-            font-size: 0.85rem; 
-            resize: none; 
-            box-sizing: border-box;
-            background-color: #f7fafc;
-            color: #2d3748;
-          "></textarea>
-          
-          <button type="button" onclick="importBackupFromTextArea()" style="
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); 
-            padding: 13px; 
-            font-size: 0.95rem; 
-            border-radius: 8px; 
-            font-weight: bold; 
-            color: white; 
-            width: 100%; 
-            margin-top: 8px;
-            border: none;
-            box-shadow: 0 3px 6px rgba(76,175,80,0.3);
-          ">
-            📥 2. Khôi Phục Dữ Liệu
-          </button>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- KHU VỰC CHÍNH HIỂN THỊ DANH SÁCH -->

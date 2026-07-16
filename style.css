@@ -61,7 +61,7 @@ body {
   padding: 20px;
   display: flex;
   flex-direction: column;
-  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Mượt hơn */
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   overflow-y: auto;
   
   /* TỐI ƯU CHO MOBILE Ở ĐÂY */
@@ -71,7 +71,7 @@ body {
 }
 
 .hidden-sidebar {
-  transform: translate3d(-100%, 0, 0); /* Thay cho translateX */
+  transform: translate3d(-100%, 0, 0);
 }
 
 .sidebar-header {
@@ -548,7 +548,6 @@ header h1 {
   }
 }
 
-/* TÌM VÀ CẬP NHẬT LẠI ĐOẠN NÀY Ở CUỐI FILE style.css */
 .selected-badge-tag {
   background: linear-gradient(135deg, var(--accent-color) 0%, #00a8cc 100%);
   color: white;
@@ -560,19 +559,17 @@ header h1 {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  /* Thêm thuộc tính này giúp tối ưu chuyển động vuốt */
   touch-action: none; 
   user-select: none;
   will-change: transform, opacity;
 }
 
-/* Ẩn nút X trên di động vì đã có tính năng vuốt, nhưng giữ lại trên PC để bấm */
 @media (max-width: 480px) {
   .selected-badge-tag b {
-    display: none !important; /* Trên mobile giấu nút X đi cho đẹp */
+    display: none !important;
   }
   .selected-badge-tag {
-    padding: 6px 14px; /* Tăng nhẹ padding cho dễ chạm và vuốt */
+    padding: 6px 14px;
     font-size: 0.85em;
   }
 }
@@ -581,7 +578,6 @@ header h1 {
   cursor: pointer;
   color: #ff4444;
   background: white;
-  /* Đã tăng kích thước để dễ bấm trên mobile */
   width: 20px;          
   height: 20px;         
   display: inline-flex;
@@ -590,23 +586,6 @@ header h1 {
   border-radius: 50%;
   font-size: 0.85em;    
   font-weight: bold;    
-  transition: all 0.2s;
-}
-
-/* Nút ✕ màu đỏ để tắt nhanh tag */
-.selected-badge-tag b {
-  cursor: pointer;
-  color: #ff4444;
-  background: white;
-  /* TĂNG KÍCH THƯỚC Ở ĐÂY */
-  width: 20px;          /* Tăng từ 14px lên 20px */
-  height: 20px;         /* Tăng từ 14px lên 20px */
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  font-size: 0.85em;    /* Tăng font chữ lên một chút để cân đối */
-  font-weight: bold;    /* Làm đậm nét chữ ✕ */
   transition: all 0.2s;
 }
 
