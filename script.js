@@ -20,34 +20,23 @@ window.onload = async () => {
   
   // Tải dữ liệu lần đầu tiên và lưu vào bộ nhớ đệm cache
   cachedLinks = await getAllLinksFromDB();
-
-  // === KHÔI PHỤC TRẠNG THÁI CŨ KHI QUAY LẠI ĐỂ KHÔNG BỊ CHẬM ===
-  const savedItemsToShow = sessionStorage.getItem('lastItemsToShow');
-  const savedScrollTop = sessionStorage.getItem('lastScrollPosition');
-
-  if (savedScrollTop && savedItemsToShow) {
-    // Nếu có lịch sử cuộn, khôi phục lại đúng số lượng mục để chuẩn bị không gian cuộn
-    itemsToShow = parseInt(savedItemsToShow, 10);
-    renderLinks(false); // render ngay với số lượng mục cũ, không reset phân trang
-  } else {
-    renderLinks(true); // Tải trang bình thường lần đầu tiên
-  }
+  renderLinks(true); // reset phân trang khi tải trang lần đầu
   
   setupImageSelectionText();
   setupClickOutside(); 
-  setupInfiniteScroll(); 
+  setupInfiniteScroll(); // Kích hoạt tính năng cuộn đến đâu load đến đó
 
-  // Thực hiện cuộn mượt sau khi DOM đã được dựng sẵn chiều dài
-  if (savedScrollTop && savedItemsToShow) {
+  // === TỰ ĐỘNG CUỘN VỀ VỊ TRÍ CŨ KHI QUAY LẠI ===
+  const savedScrollTop = sessionStorage.getItem('lastScrollPosition');
+  if (savedScrollTop) {
+    // Chờ một nhịp nhỏ để DOM và ảnh kịp hiển thị rồi cuộn
     setTimeout(() => {
       window.scrollTo({
         top: parseInt(savedScrollTop, 10),
-        behavior: 'instant'
+        behavior: 'instant' // Cuộn ngay lập tức không gây giật màn hình
       });
-      // Xóa bộ nhớ đệm sau khi đã phục hồi xong
-      sessionStorage.removeItem('lastScrollPosition');
-      sessionStorage.removeItem('lastItemsToShow');
-    }, 100); // 100ms là đủ để mobile dựng xong layout mà không gây giật
+      sessionStorage.removeItem('lastScrollPosition'); // Cuộn xong thì xóa đi cho sạch
+    }, 100);
   }
 
   const allInputsOnPage = document.querySelectorAll('input');
@@ -561,9 +550,8 @@ function showStatus(message) {
 }
 
 function markAsViewed(id) {
-  // Ghi nhớ vị trí cuộn và số lượng mục đang hiển thị hiện tại
+  // Ghi nhớ vị trí cuộn hiện tại trước khi chuyển trang
   sessionStorage.setItem('lastScrollPosition', window.scrollY);
-  sessionStorage.setItem('lastItemsToShow', itemsToShow);
 
   const titleEl = document.getElementById(`title-${id}`);
   if (titleEl) {
