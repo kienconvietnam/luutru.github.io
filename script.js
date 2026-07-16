@@ -26,6 +26,19 @@ window.onload = async () => {
   setupClickOutside(); 
   setupInfiniteScroll(); // Kích hoạt tính năng cuộn đến đâu load đến đó
 
+  // === TỰ ĐỘNG CUỘN VỀ VỊ TRÍ CŨ KHI QUAY LẠI ===
+  const savedScrollTop = sessionStorage.getItem('lastScrollPosition');
+  if (savedScrollTop) {
+    // Chờ một nhịp nhỏ để DOM và ảnh kịp hiển thị rồi cuộn
+    setTimeout(() => {
+      window.scrollTo({
+        top: parseInt(savedScrollTop, 10),
+        behavior: 'instant' // Cuộn ngay lập tức không gây giật màn hình
+      });
+      sessionStorage.removeItem('lastScrollPosition'); // Cuộn xong thì xóa đi cho sạch
+    }, 100);
+  }
+
   const allInputsOnPage = document.querySelectorAll('input');
   allInputsOnPage.forEach(input => {
     input.addEventListener('keydown', (e) => {
@@ -218,8 +231,14 @@ function editLink(id) {
   editingId = id;
   document.getElementById('addOrUpdateBtn').textContent = "Cập nhật";
   
-  const sidebar = document.getElementById('sidebarForm');
-  sidebar.classList.remove('hidden-sidebar');
+  // Dùng setTimeout xử lý bất đồng bộ để tránh bị hàm click outside đóng lại ngay lập tức
+  setTimeout(() => {
+    const sidebar = document.getElementById('sidebarForm');
+    if (sidebar) {
+      sidebar.classList.remove('hidden-sidebar');
+    }
+  }, 0);
+
   showStatus("Đang sửa link...");
 }
 
@@ -293,8 +312,12 @@ function setupClickOutside() {
     const sidebar = document.getElementById('sidebarForm');
     const menuToggleBtn = document.querySelector('.menu-toggle-btn');
     
+    // KIỂM TRA SIDEBAR ĐANG MỞ
     if (sidebar && !sidebar.classList.contains('hidden-sidebar')) {
-      if (!sidebar.contains(e.target) && !menuToggleBtn.contains(e.target)) {
+      // Nếu click ra ngoài sidebar VÀ ngoài nút Menu VÀ ngoài nút Sửa thì mới đóng
+      if (!sidebar.contains(e.target) && 
+          !menuToggleBtn.contains(e.target) && 
+          !e.target.classList.contains('edit-btn')) {
         sidebar.classList.add('hidden-sidebar'); 
       }
     }
@@ -520,6 +543,9 @@ function showStatus(message) {
 }
 
 function markAsViewed(id) {
+  // Ghi nhớ vị trí cuộn hiện tại trước khi chuyển trang
+  sessionStorage.setItem('lastScrollPosition', window.scrollY);
+
   const titleEl = document.getElementById(`title-${id}`);
   if (titleEl) {
     titleEl.style.color = '#bbb';
