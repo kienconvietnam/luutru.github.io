@@ -20,23 +20,34 @@ window.onload = async () => {
   
   // Tải dữ liệu lần đầu tiên và lưu vào bộ nhớ đệm cache
   cachedLinks = await getAllLinksFromDB();
-  renderLinks(true); // reset phân trang khi tải trang lần đầu
+
+  // === KHÔI PHỤC TRẠNG THÁI CŨ KHI QUAY LẠI ĐỂ KHÔNG BỊ CHẬM ===
+  const savedItemsToShow = sessionStorage.getItem('lastItemsToShow');
+  const savedScrollTop = sessionStorage.getItem('lastScrollPosition');
+
+  if (savedScrollTop && savedItemsToShow) {
+    // Nếu có lịch sử cuộn, khôi phục lại đúng số lượng mục để chuẩn bị không gian cuộn
+    itemsToShow = parseInt(savedItemsToShow, 10);
+    renderLinks(false); // render ngay với số lượng mục cũ, không reset phân trang
+  } else {
+    renderLinks(true); // Tải trang bình thường lần đầu tiên
+  }
   
   setupImageSelectionText();
   setupClickOutside(); 
-  setupInfiniteScroll(); // Kích hoạt tính năng cuộn đến đâu load đến đó
+  setupInfiniteScroll(); 
 
-  // === TỰ ĐỘNG CUỘN VỀ VỊ TRÍ CŨ KHI QUAY LẠI ===
-  const savedScrollTop = sessionStorage.getItem('lastScrollPosition');
-  if (savedScrollTop) {
-    // Chờ một nhịp nhỏ để DOM và ảnh kịp hiển thị rồi cuộn
+  // Thực hiện cuộn mượt sau khi DOM đã được dựng sẵn chiều dài
+  if (savedScrollTop && savedItemsToShow) {
     setTimeout(() => {
       window.scrollTo({
         top: parseInt(savedScrollTop, 10),
-        behavior: 'instant' // Cuộn ngay lập tức không gây giật màn hình
+        behavior: 'instant'
       });
-      sessionStorage.removeItem('lastScrollPosition'); // Cuộn xong thì xóa đi cho sạch
-    }, 100);
+      // Xóa bộ nhớ đệm sau khi đã phục hồi xong
+      sessionStorage.removeItem('lastScrollPosition');
+      sessionStorage.removeItem('lastItemsToShow');
+    }, 100); // 100ms là đủ để mobile dựng xong layout mà không gây giật
   }
 
   const allInputsOnPage = document.querySelectorAll('input');
@@ -471,14 +482,21 @@ async function renderLinks(resetPagination = false) {
 }
 
 // HÀM THEO DÕI CUỘN MÀN HÌNH ĐỂ TỰ ĐỘNG LOAD THÊM TRUYỆN/VIDEO KHÔNG GÂY ĐƠ MÁY
+let isScrolling = false;
 function setupInfiniteScroll() {
   window.addEventListener('scroll', () => {
-    if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 150) {
-      if (itemsToShow < filteredTruyenGlobal.length || itemsToShow < filteredVideoGlobal.length) {
-        itemsToShow += 14; 
-        renderLinks(false); 
+    if (isScrolling) return;
+
+    isScrolling = true;
+    requestAnimationFrame(() => {
+      if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 150) {
+        if (itemsToShow < filteredTruyenGlobal.length || itemsToShow < filteredVideoGlobal.length) {
+          itemsToShow += 14; 
+          renderLinks(false); 
+        }
       }
-    }
+      isScrolling = false;
+    });
   });
 }
 
@@ -543,8 +561,9 @@ function showStatus(message) {
 }
 
 function markAsViewed(id) {
-  // Ghi nhớ vị trí cuộn hiện tại trước khi chuyển trang
+  // Ghi nhớ vị trí cuộn và số lượng mục đang hiển thị hiện tại
   sessionStorage.setItem('lastScrollPosition', window.scrollY);
+  sessionStorage.setItem('lastItemsToShow', itemsToShow);
 
   const titleEl = document.getElementById(`title-${id}`);
   if (titleEl) {
