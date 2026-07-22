@@ -130,7 +130,7 @@ function toggleSidebar() {
 
 document.getElementById('addOrUpdateBtn');
 
-function compressImage(file, maxWidth = 200, maxHeight = 280) {
+function compressImage(file, maxWidth = 800, maxHeight = 1000) {
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -140,6 +140,7 @@ function compressImage(file, maxWidth = 200, maxHeight = 280) {
         let width = img.width;
         let height = img.height;
 
+        // Tính toán giữ nguyên tỷ lệ khung hình
         if (width > height) {
           if (width > maxWidth) {
             height *= maxWidth / width;
@@ -155,8 +156,15 @@ function compressImage(file, maxWidth = 200, maxHeight = 280) {
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
+        
+        // Bật chế độ làm nét ảnh khi vẽ lại trên Canvas
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        
         ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', 0.7));
+        
+        // Xuất ảnh chất lượng cao 0.9 (90%)
+        resolve(canvas.toDataURL('image/jpeg', 0.9));
       };
       img.src = e.target.result;
     };
