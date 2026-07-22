@@ -130,43 +130,12 @@ function toggleSidebar() {
 
 document.getElementById('addOrUpdateBtn');
 
-function compressImage(file, maxWidth = 800, maxHeight = 1000) {
+// ĐÃ SỬA: Đọc trực tiếp Base64 gốc của ảnh để giữ độ nét tuyệt đối
+function compressImage(file) {
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width = img.width;
-        let height = img.height;
-
-        // Tính toán giữ nguyên tỷ lệ khung hình
-        if (width > height) {
-          if (width > maxWidth) {
-            height *= maxWidth / width;
-            width = maxWidth;
-          }
-        } else {
-          if (height > maxHeight) {
-            width *= maxHeight / height;
-            height = maxHeight;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        
-        // Bật chế độ làm nét ảnh khi vẽ lại trên Canvas
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        // Xuất ảnh chất lượng cao 0.9 (90%)
-        resolve(canvas.toDataURL('image/jpeg', 0.9));
-      };
-      img.src = e.target.result;
+      resolve(e.target.result);
     };
     reader.readAsDataURL(file);
   });
@@ -434,18 +403,14 @@ async function renderLinks(resetPagination = false) {
     return wrapperHTML;
   };
 
-  // GIẢI PHÁP TỐI ƯU CỐT LÕI: Chia nhỏ xử lý ghi đè DOM để không đơ máy
-  // 1. Dựng danh mục Truyện trước ngay lập tức bằng DocumentFragment ngầm định
   const truyenHTML = truyenLinks.length ? createHTML(truyenLinks) : `<div class="empty-state">Không có truyện phù hợp.</div>`;
   truyenList.innerHTML = truyenHTML;
 
-  // 2. Trì hoãn nhẹ danh mục Video sang khung hình tiếp theo (Vừa mắt người, máy không tốn tài nguyên gánh 2 việc)
   requestAnimationFrame(() => {
     const videoHTML = videoLinks.length ? createHTML(videoLinks) : `<div class="empty-state">Không có video phù hợp.</div>`;
     videoList.innerHTML = videoHTML;
   });
 
-  // Cập nhật các badge tag hiển thị
   const activeTagTruyenEl = document.getElementById('activeTag-truyen');
   const activeTagVideoEl = document.getElementById('activeTag-video');
 
@@ -467,7 +432,6 @@ async function renderLinks(resetPagination = false) {
   }
 }
 
-// HÀM THEO DÕI CUỘN MÀN HÌNH ĐỂ TỰ ĐỘNG LOAD THÊM TRUYỆN/VIDEO KHÔNG GÂY ĐƠ MÁY
 let isScrolling = false;
 function setupInfiniteScroll() {
   window.addEventListener('scroll', () => {

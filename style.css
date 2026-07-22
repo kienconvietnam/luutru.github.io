@@ -402,6 +402,7 @@ header h1 {
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   border: 2px solid #ffffff;
   background-color: #eaeef3;
+  image-rendering: -webkit-optimize-contrast; /* Tối ưu hiển thị ảnh nét hơn */
 }
 
 .view-btn {
